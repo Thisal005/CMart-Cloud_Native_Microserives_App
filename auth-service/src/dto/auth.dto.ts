@@ -26,10 +26,21 @@ export interface UserResponseDto {
 
 export interface AuthResponseDto {
   token: string;
+  refreshToken: string;
   user: UserResponseDto;
+}
+
+export interface RefreshTokenRequestDto {
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponseDto {
+  token: string;
+  refreshToken: string;
 }
 
 export interface ValidateResponseDto {
   valid: boolean;
   user?: UserResponseDto;
 }
+

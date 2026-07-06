@@ -93,3 +93,22 @@ export const validateLoginBody: ValidatorFunc = (body: any) => {
     details: hasErrors ? details : undefined,
   };
 };
+
+/**
+ * Validation rules for refresh token and logout requests.
+ */
+export const validateRefreshTokenBody: ValidatorFunc = (body: any) => {
+  const details: Record<string, string> = {};
+  const { refreshToken } = body;
+
+  if (!refreshToken || typeof refreshToken !== 'string' || refreshToken.trim().length === 0) {
+    details.refreshToken = 'Refresh token is required';
+  }
+
+  const hasErrors = Object.keys(details).length > 0;
+  return {
+    error: hasErrors ? 'Refresh token request validation failed' : undefined,
+    details: hasErrors ? details : undefined,
+  };
+};
+

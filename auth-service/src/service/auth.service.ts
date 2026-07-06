@@ -1,9 +1,12 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import type { StringValue } from 'ms';
 import { config } from '../config';
 import { User, AccountStatus } from '../model/user';
 import { UserRepository } from '../repository/user.repository';
+import { RefreshTokenRepository } from '../repository/refresh-token.repository';
+import { BadRequestError, UnauthorizedError } from '../utils/errors';
 import {
   RegisterRequestDto,
   LoginRequestDto,
@@ -14,10 +17,13 @@ import {
 
 export class AuthService {
   private userRepository: UserRepository;
+  private refreshTokenRepository: RefreshTokenRepository;
 
   constructor(userRepository: UserRepository) {
     this.userRepository = userRepository;
+    this.refreshTokenRepository = new RefreshTokenRepository();
   }
+
 
   public async register(dto: RegisterRequestDto): Promise<AuthResponseDto> {
     const { firstName, lastName, email, password, phoneNumber, role } = dto;
@@ -43,9 +49,19 @@ export class AuthService {
     });
 
     const token = this.generateToken(user);
+    const refreshTokenStr = crypto.randomBytes(40).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + config.jwtRefreshExpirationDays);
+
+    await this.refreshTokenRepository.create({
+      token: refreshTokenStr,
+      userId: user.id,
+      expiresAt,
+    });
 
     return {
       token,
+      refreshToken: refreshTokenStr,
       user: this.toUserResponse(user),
     };
   }
@@ -79,9 +95,19 @@ export class AuthService {
     await this.userRepository.updateLastLogin(user.id);
 
     const token = this.generateToken(user);
+    const refreshTokenStr = crypto.randomBytes(40).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + config.jwtRefreshExpirationDays);
+
+    await this.refreshTokenRepository.create({
+      token: refreshTokenStr,
+      userId: user.id,
+      expiresAt,
+    });
 
     return {
       token,
+      refreshToken: refreshTokenStr,
       user: this.toUserResponse(user),
     };
   }
@@ -116,6 +142,68 @@ export class AuthService {
     }
     return this.toUserResponse(user);
   }
+
+  public async refreshToken(tokenStr: string): Promise<{ token: string; refreshToken: string }> {
+    if (!tokenStr) {
+      throw new BadRequestError('Refresh token is required');
+    }
+
+    const refreshToken = await this.refreshTokenRepository.findByToken(tokenStr);
+    if (!refreshToken) {
+      throw new UnauthorizedError('Invalid refresh token');
+    }
+
+    if (refreshToken.revokedAt) {
+      throw new UnauthorizedError('Refresh token has been revoked');
+    }
+
+    if (new Date() > refreshToken.expiresAt) {
+      throw new UnauthorizedError('Refresh token has expired');
+    }
+
+    const user = await this.userRepository.findById(refreshToken.userId);
+    if (!user || user.status !== AccountStatus.ACTIVE) {
+      throw new UnauthorizedError('User account is inactive or not found');
+    }
+
+    // Revoke current refresh token
+    await this.refreshTokenRepository.revoke(tokenStr);
+
+    // Generate new access and refresh tokens (token rotation)
+    const newAccessToken = this.generateToken(user);
+    const newRefreshTokenStr = crypto.randomBytes(40).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + config.jwtRefreshExpirationDays);
+
+    await this.refreshTokenRepository.create({
+      token: newRefreshTokenStr,
+      userId: user.id,
+      expiresAt,
+    });
+
+    return {
+      token: newAccessToken,
+      refreshToken: newRefreshTokenStr,
+    };
+  }
+
+  public async logout(tokenStr: string): Promise<void> {
+    if (!tokenStr) {
+      throw new BadRequestError('Refresh token is required');
+    }
+
+    const refreshToken = await this.refreshTokenRepository.findByToken(tokenStr);
+    if (!refreshToken) {
+      throw new UnauthorizedError('Invalid refresh token');
+    }
+
+    if (refreshToken.revokedAt) {
+      return; // Already revoked
+    }
+
+    await this.refreshTokenRepository.revoke(tokenStr);
+  }
+
 
   private generateToken(user: User): string {
     return jwt.sign(
