@@ -109,6 +109,14 @@ export class AuthService {
     }
   }
 
+  public async getProfile(id: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    return this.toUserResponse(user);
+  }
+
   private generateToken(user: User): string {
     return jwt.sign(
       {

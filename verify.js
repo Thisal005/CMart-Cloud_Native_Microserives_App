@@ -83,6 +83,16 @@ async function runTests() {
     console.log(`   ✅ Logged in. JWT Token retrieved: ${token.substring(0, 15)}...\n`);
 
     // ----------------------------------------------------
+    // 2.5. VERIFY GET PROFILE (/me)
+    // ----------------------------------------------------
+    console.log('👤 2.5. Fetching authenticated user profile...');
+    const profileRes = await request(`${AUTH_URL}/me`, 'GET', null, token);
+    if (!profileRes.ok) {
+      throw new Error(`Get profile failed (${profileRes.status}): ${JSON.stringify(profileRes.data)}`);
+    }
+    console.log(`   ✅ Profile retrieved. Name: ${profileRes.data.firstName} ${profileRes.data.lastName}, Email: ${profileRes.data.email}, Role: ${profileRes.data.role}\n`);
+
+    // ----------------------------------------------------
     // 3. GET PRODUCTS
     // ----------------------------------------------------
     console.log('📦 3. Fetching product catalog...');

@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { AuthService } from '../service/auth.service';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth.middleware';
 
 export class AuthController {
   private authService: AuthService;
@@ -15,6 +16,7 @@ export class AuthController {
     this.router.post('/register', this.register.bind(this));
     this.router.post('/login', this.login.bind(this));
     this.router.post('/validate', this.validate.bind(this));
+    this.router.get('/me', authenticateToken as any, this.getProfile.bind(this));
   }
 
   private async register(req: Request, res: Response) {
@@ -56,6 +58,19 @@ export class AuthController {
       }
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  private async getProfile(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      const profile = await this.authService.getProfile(req.user.id);
+      res.json(profile);
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
     }
   }
 }
