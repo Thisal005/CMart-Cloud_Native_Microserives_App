@@ -48,7 +48,8 @@ async function runTests() {
   console.log('🚀 Starting CMart E2E Microservices Verification...\n');
   const timestamp = Date.now();
   const testUser = {
-    username: `testuser_${timestamp}`,
+    firstName: 'Test',
+    lastName: `User_${timestamp}`,
     email: `test_${timestamp}@example.com`,
     password: 'password123',
   };
@@ -72,7 +73,7 @@ async function runTests() {
     // ----------------------------------------------------
     console.log('🔑 2. Logging in...');
     const loginRes = await request(`${AUTH_URL}/login`, 'POST', {
-      username: testUser.username,
+      email: testUser.email,
       password: testUser.password,
     });
     if (!loginRes.ok) {
