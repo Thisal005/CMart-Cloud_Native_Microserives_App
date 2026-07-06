@@ -3,6 +3,7 @@ import { config } from '../config';
 import { User, UserRole } from '../model/user';
 import { UserRepository } from '../repository/user.repository';
 import { RegisterRequestDto, LoginRequestDto, AuthResponseDto, ValidateResponseDto } from '../dto/auth.dto';
+import { ValidationError, ConflictError, AuthenticationError } from 'shared';
 
 export class AuthService {
   private userRepository: UserRepository;
@@ -15,17 +16,17 @@ export class AuthService {
     const { username, email, password, role } = dto;
 
     if (!username || !email || !password) {
-      throw new Error('Username, email, and password are required');
+      throw new ValidationError('Username, email, and password are required');
     }
 
     const existingUser = await this.userRepository.findByUsername(username);
     if (existingUser) {
-      throw new Error('Username already exists');
+      throw new ConflictError('Username already exists');
     }
 
     const existingEmail = await this.userRepository.findByEmail(email);
     if (existingEmail) {
-      throw new Error('Email already exists');
+      throw new ConflictError('Email already exists');
     }
 
     const passwordHash = this.userRepository.hashPassword(password);
@@ -53,17 +54,17 @@ export class AuthService {
     const { username, password } = dto;
 
     if (!username || !password) {
-      throw new Error('Username and password are required');
+      throw new ValidationError('Username and password are required');
     }
 
     const user = await this.userRepository.findByUsername(username);
     if (!user) {
-      throw new Error('Invalid username or password');
+      throw new AuthenticationError('Invalid username or password');
     }
 
     const hash = this.userRepository.hashPassword(password);
     if (user.passwordHash !== hash) {
-      throw new Error('Invalid username or password');
+      throw new AuthenticationError('Invalid username or password');
     }
 
     const token = this.generateToken(user);
@@ -111,7 +112,7 @@ export class AuthService {
         role: user.role,
       },
       config.jwtSecret,
-      { expiresIn: config.jwtExpiration }
+      { expiresIn: config.jwtExpiration as any }
     );
   }
 }
