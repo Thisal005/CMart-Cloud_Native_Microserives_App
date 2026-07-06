@@ -1,22 +1,27 @@
-import { UserRole } from '../model/user';
+import { Role, AccountStatus } from '../model/user';
 
 export interface RegisterRequestDto {
-  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  password?: string; // made optional in types for flexibility, but verified in logic
-  role?: UserRole;
+  password: string;
+  phoneNumber?: string;
+  role?: Role;
 }
 
 export interface LoginRequestDto {
-  username: string;
-  password?: string;
+  email: string;
+  password: string;
 }
 
 export interface UserResponseDto {
   id: string;
-  username: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  role: UserRole;
+  role: Role;
+  status: AccountStatus;
+  emailVerified: boolean;
 }
 
 export interface AuthResponseDto {
