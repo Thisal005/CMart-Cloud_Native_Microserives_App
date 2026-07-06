@@ -3,6 +3,7 @@ import cors from 'cors';
 import { UserRepository } from './repository/user.repository';
 import { AuthService } from './service/auth.service';
 import { AuthController } from './controller/auth.controller';
+import { errorHandler } from 'shared';
 
 const app = express();
 
@@ -21,5 +22,8 @@ app.get('/health', (req, res) => {
 
 // Register routes
 app.use('/api/auth', authController.router);
+
+// Register global error handler
+app.use(errorHandler);
 
 export default app;
