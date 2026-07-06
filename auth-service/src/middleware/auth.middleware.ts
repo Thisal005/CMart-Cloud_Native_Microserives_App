@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import { Role } from '../model/user';
+import { UnauthorizedError, ForbiddenError } from '../utils/errors';
 
 // Extend Express Request interface to include the authenticated user
 export interface AuthenticatedRequest extends Request {
@@ -24,7 +25,7 @@ export function authenticateToken(
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Access token is missing or invalid' });
+    next(new UnauthorizedError('Access token is missing or invalid'));
     return;
   }
 
@@ -40,7 +41,7 @@ export function authenticateToken(
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Access token is missing or invalid' });
+    next(new UnauthorizedError('Access token is missing or invalid'));
   }
 }
 
@@ -51,12 +52,12 @@ export function authenticateToken(
 export function authorizeRoles(...roles: Role[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
+      next(new UnauthorizedError('Unauthorized'));
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
+      next(new ForbiddenError('Forbidden: Insufficient permissions'));
       return;
     }
 
