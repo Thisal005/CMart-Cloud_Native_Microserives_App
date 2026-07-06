@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/error.middleware';
 import { UserRepository } from './repository/user.repository';
 import { AuthService } from './service/auth.service';
 import { AuthController } from './controller/auth.controller';
+import { errorHandler } from 'shared';
 
 const app = express();
 
@@ -30,5 +31,8 @@ export function registerRoutes(app: express.Application): void {
   // Global error handler must be registered after all routes
   app.use(errorHandler);
 }
+
+// Register global error handler
+app.use(errorHandler);
 
 export default app;
