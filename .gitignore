@@ -1,2 +1,4 @@
 node_modules
 product-service/dist/
+.env
+dist
