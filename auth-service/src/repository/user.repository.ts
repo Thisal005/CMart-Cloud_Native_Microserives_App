@@ -1,66 +1,116 @@
-import { User, UserRole } from '../model/user';
-import crypto from 'crypto';
+import { Repository } from 'typeorm';
+import { User, AccountStatus } from '../model/user';
+import { AppDataSource } from '../config/data-source';
 
 export class UserRepository {
-  private users: User[] = [];
+  private repository: Repository<User>;
 
   constructor() {
-    // Seed default users for testing
-    this.seedUsers();
+    this.repository = AppDataSource.getRepository(User);
   }
 
-  private seedUsers() {
-    const defaultUsers = [
-      {
-        username: 'admin',
-        email: 'admin@cmart.com',
-        password: 'adminpassword',
-        role: UserRole.ADMIN,
-      },
-      {
-        username: 'john_doe',
-        email: 'john@gmail.com',
-        password: 'userpassword',
-        role: UserRole.USER,
-      }
-    ];
+  /**
+   * Find a user by their unique ID.
+   */
+  public async findById(id: string): Promise<User | null> {
+    return this.repository.findOne({
+      where: { id },
+    });
+  }
 
-    for (const u of defaultUsers) {
-      const passwordHash = this.hashPassword(u.password);
-      this.users.push({
-        id: crypto.randomUUID(),
-        username: u.username,
-        email: u.email,
-        passwordHash,
-        role: u.role,
-        createdAt: new Date(),
-      });
+  /**
+   * Find a user by their email address (case-insensitive search).
+   */
+  public async findByEmail(email: string): Promise<User | null> {
+    return this.repository.findOne({
+      where: { email: email.toLowerCase() },
+    });
+  }
+
+  /**
+   * Check if a user with the given email address already exists.
+   */
+  public async emailExists(email: string): Promise<boolean> {
+    const count = await this.repository.count({
+      where: { email: email.toLowerCase() },
+    });
+    return count > 0;
+  }
+
+  /**
+   * Creates a new User instance (not saved to the DB yet).
+   */
+  public createInstance(data: Partial<User>): User {
+    return this.repository.create({
+      ...data,
+      email: data.email?.toLowerCase(),
+    });
+  }
+
+  /**
+   * Creates and saves a new user in a single operation.
+   */
+  public async create(data: Partial<User>): Promise<User> {
+    const user = this.createInstance(data);
+    return this.repository.save(user);
+  }
+
+  /**
+   * Persists a User entity instance to the database.
+   * This is used for both inserts and updates of pre-loaded/constructed instances.
+   */
+  public async save(user: User): Promise<User> {
+    if (user.email) {
+      user.email = user.email.toLowerCase();
     }
+    return this.repository.save(user);
   }
 
-  public hashPassword(password: string): string {
-    return crypto.createHash('sha256').update(password).digest('hex');
+  /**
+   * Updates an existing user by merging partial data.
+   * Loads the user first to ensure @BeforeUpdate lifecycle hooks are triggered on save.
+   */
+  public async update(id: string, data: Partial<User>): Promise<User> {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    this.repository.merge(user, {
+      ...data,
+      email: data.email?.toLowerCase(),
+    });
+    return this.repository.save(user);
   }
 
-  public async findByUsername(username: string): Promise<User | undefined> {
-    return this.users.find((u) => u.username.toLowerCase() === username.toLowerCase());
+  /**
+   * Updates the last login timestamp of a user.
+   */
+  public async updateLastLogin(id: string): Promise<void> {
+    await this.repository.update(id, {
+      lastLoginAt: new Date(),
+    });
   }
 
-  public async findByEmail(email: string): Promise<User | undefined> {
-    return this.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  /**
+   * Performs a hard delete on a user by ID.
+   */
+  public async delete(id: string): Promise<boolean> {
+    const result = await this.repository.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 
-  public async findById(id: string): Promise<User | undefined> {
-    return this.users.find((u) => u.id === id);
-  }
-
-  public async create(user: Omit<User, 'id' | 'createdAt'>): Promise<User> {
-    const newUser: User = {
-      ...user,
-      id: crypto.randomUUID(),
-      createdAt: new Date(),
-    };
-    this.users.push(newUser);
-    return newUser;
+  /**
+   * Performs a soft delete by marking the user's account status as INACTIVE.
+   * Note: The current database schema does not have a dedicated 'deleted_at' timestamp,
+   * so soft deletion is represented logically by changing the account status.
+   */
+  public async softDelete(id: string): Promise<boolean> {
+    const user = await this.findById(id);
+    if (!user) {
+      return false;
+    }
+    user.status = AccountStatus.INACTIVE;
+    await this.repository.save(user);
+    return true;
   }
 }

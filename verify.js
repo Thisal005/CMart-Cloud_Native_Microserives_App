@@ -48,7 +48,8 @@ async function runTests() {
   console.log('🚀 Starting CMart E2E Microservices Verification...\n');
   const timestamp = Date.now();
   const testUser = {
-    username: `testuser_${timestamp}`,
+    firstName: 'Test',
+    lastName: `User_${timestamp}`,
     email: `test_${timestamp}@example.com`,
     password: 'password123',
   };
@@ -72,7 +73,7 @@ async function runTests() {
     // ----------------------------------------------------
     console.log('🔑 2. Logging in...');
     const loginRes = await request(`${AUTH_URL}/login`, 'POST', {
-      username: testUser.username,
+      email: testUser.email,
       password: testUser.password,
     });
     if (!loginRes.ok) {
@@ -80,6 +81,16 @@ async function runTests() {
     }
     token = loginRes.data.token;
     console.log(`   ✅ Logged in. JWT Token retrieved: ${token.substring(0, 15)}...\n`);
+
+    // ----------------------------------------------------
+    // 2.5. VERIFY GET PROFILE (/me)
+    // ----------------------------------------------------
+    console.log('👤 2.5. Fetching authenticated user profile...');
+    const profileRes = await request(`${AUTH_URL}/me`, 'GET', null, token);
+    if (!profileRes.ok) {
+      throw new Error(`Get profile failed (${profileRes.status}): ${JSON.stringify(profileRes.data)}`);
+    }
+    console.log(`   ✅ Profile retrieved. Name: ${profileRes.data.firstName} ${profileRes.data.lastName}, Email: ${profileRes.data.email}, Role: ${profileRes.data.role}\n`);
 
     // ----------------------------------------------------
     // 3. GET PRODUCTS
