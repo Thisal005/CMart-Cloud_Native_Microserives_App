@@ -3,3 +3,6 @@ node_modules
 .gitignore
 cart-service/dist/
 product-service/dist/
+product-service/dist/
+.env
+dist

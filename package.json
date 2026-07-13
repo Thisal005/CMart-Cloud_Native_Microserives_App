@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
+    "shared",
     "auth-service",
     "product-service",
     "cart-service",
