@@ -1,93 +1,196 @@
-import axios from 'axios';
-import { config } from '../config';
-import { Cart, CartItem } from '../model/cart';
+import { NotFoundError, ValidationError } from 'shared';
+import { Cart } from '../model/cart.entity';
+import { CartItem } from '../model/cart-item.entity';
 import { CartRepository } from '../repository/cart.repository';
+import { CartItemRepository } from '../repository/cart-item.repository';
+import { ProductClient } from '../client/product.client';
 import { AddToCartDto } from '../dto/cart.dto';
+import { logger } from '../utils/logger';
 
 export class CartService {
   private cartRepository: CartRepository;
+  private cartItemRepository: CartItemRepository;
+  private productClient: ProductClient;
 
   constructor(cartRepository: CartRepository) {
     this.cartRepository = cartRepository;
+    this.cartItemRepository = new CartItemRepository();
+    this.productClient = new ProductClient();
   }
 
+  /**
+   * Get Cart: Retrieve current user's cart, creating it if it doesn't exist,
+   * and populates transient product names from the Product Service.
+   */
   public async getCart(userId: string): Promise<Cart> {
+    logger.info(`Retrieving cart for user: ${userId}`);
     let cart = await this.cartRepository.findByUserId(userId);
+    
     if (!cart) {
-      cart = {
+      logger.info(`No existing cart found for user: ${userId}. Creating new cart.`);
+      cart = await this.cartRepository.create({
         userId,
         items: [],
-        totalAmount: 0,
-      };
-      await this.cartRepository.save(cart);
+      });
+      logger.info(`Cart created successfully for user: ${userId} with ID: ${cart.id}`);
     }
+
+    // Populate transient product names using ProductClient
+    if (cart.items && cart.items.length > 0) {
+      await Promise.all(
+        cart.items.map(async (item) => {
+          try {
+            const product = await this.productClient.getProductById(item.productId);
+            item.name = product.name;
+          } catch (error: any) {
+            logger.warn(`Could not fetch product name for item ${item.productId}: ${error.message}`);
+            item.name = 'Unknown Product';
+          }
+        })
+      );
+    }
+
     return cart;
   }
 
+  /**
+   * Add Item: Adds a product item to the user's cart.
+   * Validates product existence, active status, quantity, and stock limits.
+   */
   public async addToCart(userId: string, dto: AddToCartDto): Promise<Cart> {
     const { productId, quantity } = dto;
 
-    if (!productId || quantity <= 0) {
-      throw new Error('Valid productId and quantity greater than 0 are required');
+    logger.info(`Adding item to cart. User: ${userId}, Product: ${productId}, Quantity: ${quantity}`);
+
+    if (!productId || typeof productId !== 'string' || productId.trim().length === 0) {
+      throw new ValidationError('Product ID is required and must be a non-empty string');
     }
 
-    // Call Product Service to fetch details
-    let product;
-    try {
-      const response = await axios.get(`${config.productServiceUrl}/api/products/${productId}`);
-      product = response.data;
-    } catch (error: any) {
-      throw new Error(`Product check failed: ${error.response?.data?.error || 'Product not found'}`);
+    if (quantity === undefined || quantity === null || !Number.isInteger(quantity) || quantity <= 0) {
+      throw new ValidationError('Quantity must be a positive integer greater than 0');
     }
 
+    // Fetch product details via ProductClient (handles 404/NotFoundError mapping)
+    const product = await this.productClient.getProductById(productId);
+
+    // Validate product is active
+    if (product.isActive === false) {
+      logger.warn(`Failed to add item: Product ${productId} is currently inactive.`);
+      throw new ValidationError('Product is inactive and cannot be added to the cart');
+    }
+
+    // Validate stock levels
     if (product.stock < quantity) {
-      throw new Error(`Insufficient stock. Available: ${product.stock}`);
+      logger.warn(`Failed to add item: Insufficient stock for product ${productId}. Available: ${product.stock}, Requested: ${quantity}`);
+      throw new ValidationError(`Insufficient stock. Available: ${product.stock}`);
     }
 
     const cart = await this.getCart(userId);
     const existingItemIndex = cart.items.findIndex(item => item.productId === productId);
 
     if (existingItemIndex > -1) {
-      // Check total quantity against stock
       const newQuantity = cart.items[existingItemIndex].quantity + quantity;
       if (product.stock < newQuantity) {
-        throw new Error(`Insufficient stock. Total requested quantity (${newQuantity}) exceeds stock (${product.stock})`);
+        logger.warn(`Failed to update item: Insufficient stock for product ${productId}. Available: ${product.stock}, Total Requested: ${newQuantity}`);
+        throw new ValidationError(`Insufficient stock. Total requested quantity (${newQuantity}) exceeds stock (${product.stock})`);
       }
       cart.items[existingItemIndex].quantity = newQuantity;
-      // Keep price updated from the product service
-      cart.items[existingItemIndex].price = product.price;
+      cart.items[existingItemIndex].unitPrice = product.price;
+      logger.info(`Quantity updated for product ${productId} in user ${userId}'s cart.`);
     } else {
-      cart.items.push({
-        productId,
-        name: product.name,
-        price: product.price,
-        quantity,
-      });
+      const newItem = new CartItem();
+      newItem.productId = productId;
+      newItem.quantity = quantity;
+      newItem.unitPrice = product.price;
+      newItem.cart = cart;
+      newItem.cartId = cart.id;
+      cart.items.push(newItem);
+      logger.info(`Item added successfully for product ${productId} in user ${userId}'s cart.`);
     }
 
-    this.recalculateTotal(cart);
-    return this.cartRepository.save(cart);
+    await this.cartRepository.save(cart);
+
+    // Return fresh cart state with populated names
+    return this.getCart(userId);
   }
 
-  public async removeFromCart(userId: string, productId: string): Promise<Cart> {
-    const cart = await this.getCart(userId);
-    const index = cart.items.findIndex(item => item.productId === productId);
+  /**
+   * Update Quantity: Updates the quantity of an existing item in the cart by item ID.
+   * Validates quantity limits and stock availability.
+   */
+  public async updateItemQuantity(userId: string, itemId: string, quantity: number): Promise<Cart> {
+    logger.info(`Updating item quantity. User: ${userId}, Item ID: ${itemId}, Target Quantity: ${quantity}`);
 
-    if (index === -1) {
-      throw new Error(`Product ${productId} not found in cart`);
+    if (quantity === undefined || quantity === null || !Number.isInteger(quantity) || quantity <= 0) {
+      throw new ValidationError('Quantity must be a positive integer greater than 0');
     }
 
-    cart.items.splice(index, 1);
-    this.recalculateTotal(cart);
-    return this.cartRepository.save(cart);
+    // Fetch item first to obtain the product ID and verify ownership
+    const item = await this.cartItemRepository.findById(itemId);
+    if (!item) {
+      logger.warn(`Failed to update quantity: Cart item ${itemId} not found.`);
+      throw new NotFoundError(`Cart item not found`);
+    }
+
+    // Enforce strict security: users can access/modify only their own cart
+    if (item.cart.userId !== userId) {
+      logger.warn(`Unauthorized access attempt: User ${userId} tried to modify item ${itemId} belonging to user ${item.cart.userId}.`);
+      throw new NotFoundError(`Cart item not found`); // throw NotFound to avoid leaking ID existence
+    }
+
+    // Fetch product details via ProductClient (validates exists and fetches stock/price)
+    const product = await this.productClient.getProductById(item.productId);
+
+    // Validate product is active
+    if (product.isActive === false) {
+      throw new ValidationError('Product is inactive and cannot be modified in the cart');
+    }
+
+    // Validate stock levels
+    if (product.stock < quantity) {
+      logger.warn(`Failed to update quantity: Insufficient stock for product ${item.productId}. Available: ${product.stock}, Requested: ${quantity}`);
+      throw new ValidationError(`Insufficient stock. Available: ${product.stock}`);
+    }
+
+    item.quantity = quantity;
+    item.unitPrice = product.price;
+
+    await this.cartItemRepository.save(item);
+    logger.info(`Quantity updated for cart item ${itemId} successfully to ${quantity}.`);
+
+    return this.getCart(userId);
   }
 
+  /**
+   * Remove Item: Removes a product from the user's cart by item ID.
+   */
+  public async removeFromCart(userId: string, itemId: string): Promise<Cart> {
+    logger.info(`Removing item from cart. User: ${userId}, Item ID: ${itemId}`);
+
+    const item = await this.cartItemRepository.findById(itemId);
+    if (!item) {
+      logger.warn(`Failed to remove item: Cart item ${itemId} not found.`);
+      throw new NotFoundError(`Cart item not found`);
+    }
+
+    // Enforce strict security check
+    if (item.cart.userId !== userId) {
+      logger.warn(`Unauthorized remove attempt: User ${userId} tried to delete item ${itemId} belonging to user ${item.cart.userId}.`);
+      throw new NotFoundError(`Cart item not found`);
+    }
+
+    await this.cartItemRepository.remove(item.id);
+    logger.info(`Item removed successfully. Cart item ID: ${itemId}`);
+
+    return this.getCart(userId);
+  }
+
+  /**
+   * Clear Cart: Deletes the user's cart and all its items.
+   */
   public async clearCart(userId: string): Promise<void> {
+    logger.info(`Clearing cart for user: ${userId}`);
     await this.cartRepository.deleteByUserId(userId);
-  }
-
-  private recalculateTotal(cart: Cart) {
-    const total = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    cart.totalAmount = parseFloat(total.toFixed(2));
+    logger.info(`Successfully cleared cart for user ${userId}.`);
   }
 }
