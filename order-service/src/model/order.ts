@@ -1,7 +1,11 @@
 export enum OrderStatus {
   PENDING = 'PENDING',
+  PAYMENT_PENDING = 'PAYMENT_PENDING',
   PAID = 'PAID',
-  FAILED = 'FAILED',
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
+  PROCESSING = 'PROCESSING',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
 }
 
 export interface OrderItem {
@@ -20,3 +24,4 @@ export interface Order {
   transactionId?: string;
   createdAt: Date;
 }
+
