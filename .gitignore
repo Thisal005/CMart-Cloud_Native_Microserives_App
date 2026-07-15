@@ -1,8 +1,11 @@
+
 node_modules
 
 .gitignore
 cart-service/dist/
 product-service/dist/
 product-service/dist/
+order-service/dist/
+payment-service/dist/
 .env
 dist
