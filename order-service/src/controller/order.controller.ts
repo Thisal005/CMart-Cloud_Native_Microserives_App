@@ -1,6 +1,17 @@
-import { Response, Router } from 'express';
+import { Response, NextFunction, Router } from 'express';
+import { ApiResponseHelper, authMiddleware, AuthenticatedRequest, requireRole } from 'shared';
 import { OrderService } from '../service/order.service';
-import { authenticate, AuthenticatedRequest } from '../middleware/auth.middleware';
+import { config } from '../config';
+import { OrderStatus } from '../model/order';
+import { logger } from '../utils/logger';
+import {
+  validateBody,
+  validateQuery,
+  validateUuidParam,
+  validateCreateOrderBody,
+  validateUpdateStatusBody,
+  validateGetOrdersQuery,
+} from '../middleware/validation.middleware';
 
 export class OrderController {
   private orderService: OrderService;
@@ -13,59 +24,107 @@ export class OrderController {
   }
 
   private initializeRoutes() {
-    this.router.use(authenticate as any); // secure all order endpoints
-    this.router.post('/', this.createOrder.bind(this));
-    this.router.get('/', this.getOrders.bind(this));
-    this.router.get('/:id', this.getOrder.bind(this));
+    // Secure all order endpoints using standard authentication middleware from shared package
+    this.router.use(authMiddleware(config.jwtSecret) as any);
+
+    this.router.post('/', validateBody(validateCreateOrderBody), this.createOrder.bind(this));
+    this.router.get('/', validateQuery(validateGetOrdersQuery), this.getOrders.bind(this));
+    this.router.get('/:id', validateUuidParam('id'), this.getOrder.bind(this));
+    
+    // Status update is restricted to Admin role only
+    this.router.patch(
+      '/:id/status',
+      requireRole(['ADMIN']) as any,
+      validateUuidParam('id'),
+      validateBody(validateUpdateStatusBody),
+      this.updateOrderStatus.bind(this)
+    );
   }
 
-  private async createOrder(req: AuthenticatedRequest, res: Response) {
+  /**
+   * POST /api/v1/orders
+   * Creates a new order from user's current cart.
+   */
+  private async createOrder(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
+      const correlationId = (req.headers['x-correlation-id'] || req.headers['x-request-id']) as string | undefined;
+      logger.info('Create order request received', {
+        userId: req.user!.id,
+        path: req.originalUrl,
+        method: req.method,
+        ...(correlationId && { correlationId }),
+      });
+
+      // Extract the bearer token from request headers to forward to other services
       let token = req.headers.authorization;
       if (token && token.startsWith('Bearer ')) {
-        token = token.slice(7);
+        token = token.slice(7).trim();
       }
 
       if (!token) {
-        res.status(401).json({ error: 'Auth token is missing' });
-        return;
+        token = (req.body?.token || req.query?.token || '') as string;
       }
 
-      const order = await this.orderService.createOrder(req.user!.id, token, req.body);
-      
-      if (order.status === 'PAID') {
-        res.status(201).json(order);
-      } else {
-        res.status(400).json({
-          message: 'Order created, but payment processing failed.',
-          order,
-        });
-      }
+      const order = await this.orderService.createOrder(req.user!.id, token);
+
+      res.status(201).json(ApiResponseHelper.success(order, 'Order created successfully'));
     } catch (error: any) {
-      res.status(400).json({ error: error.message });
+      next(error);
     }
   }
 
-  private async getOrders(req: AuthenticatedRequest, res: Response) {
+  /**
+   * GET /api/v1/orders
+   * Retrieves orders with filters and pagination.
+   *
+   * Query params: ?page=1&limit=10&status=PAID&userId=uuid
+   */
+  private async getOrders(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const orders = await this.orderService.getOrdersByUserId(req.user!.id);
-      res.json(orders);
+      const page = parseInt(req.query.page as string || '1', 10);
+      const limit = parseInt(req.query.limit as string || '10', 10);
+      const status = req.query.status as OrderStatus | undefined;
+      const targetUserId = req.query.userId as string | undefined;
+
+      const result = await this.orderService.getOrders(
+        req.user!.id,
+        req.user!.role,
+        { status, targetUserId },
+        page,
+        limit
+      );
+
+      res.json(ApiResponseHelper.paginated(result.data, page, limit, result.total));
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      next(error);
     }
   }
 
-  private async getOrder(req: AuthenticatedRequest, res: Response) {
+  /**
+   * GET /api/v1/orders/:id
+   * Retrieves a specific order by ID.
+   * Ownership check is enforced in the service layer.
+   */
+  private async getOrder(req: AuthenticatedRequest, res: Response, next: NextFunction) {
     try {
-      const order = await this.orderService.getOrderById(req.params.id);
-      // Authorization check: User can only see their own orders
-      if (order.userId !== req.user!.id) {
-        res.status(403).json({ error: 'Access forbidden' });
-        return;
-      }
-      res.json(order);
+      const order = await this.orderService.getOrderById(req.params.id, req.user!.id, req.user!.role);
+      res.json(ApiResponseHelper.success(order));
     } catch (error: any) {
-      res.status(404).json({ error: error.message });
+      next(error);
+    }
+  }
+
+  /**
+   * PATCH /api/v1/orders/:id/status
+   * Updates the lifecycle status of an existing order.
+   */
+  private async updateOrderStatus(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+    try {
+      const { status } = req.body;
+      const order = await this.orderService.updateOrderStatus(req.params.id, status as OrderStatus, req.user!.id);
+      res.json(ApiResponseHelper.success(order, 'Order status updated successfully'));
+    } catch (error: any) {
+      next(error);
     }
   }
 }
