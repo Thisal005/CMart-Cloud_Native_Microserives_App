@@ -1,5 +1,6 @@
 
 node_modules
+
 .gitignore
 cart-service/dist/
 product-service/dist/
