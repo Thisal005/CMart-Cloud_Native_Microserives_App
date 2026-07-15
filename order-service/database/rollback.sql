@@ -3,7 +3,7 @@
 -- ============================================================
 -- Run this script to completely tear down the database schema
 -- and revert database components to a pre-migration state.
--- ============================================================
+-------- ============================================================
 
 -- 1. Drop Triggers
 DROP TRIGGER IF EXISTS trg_order_items_updated_at ON order_items;
