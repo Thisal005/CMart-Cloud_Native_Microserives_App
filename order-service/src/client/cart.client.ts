@@ -30,12 +30,12 @@ export class CartClient {
   public async getCart(token: string): Promise<CartExternalDto> {
     logger.info('External request started', { service: 'CartService', requestType: 'GET', path: '/api/cart' });
     try {
-      const response = await axios.get<CartExternalDto>(`${this.baseUrl}/api/cart`, {
+      const response = await axios.get<any>(`${this.baseUrl}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` },
         timeout: 5000,
       });
       logger.info('External request successful', { service: 'CartService', requestType: 'GET', path: '/api/cart', success: true });
-      return response.data;
+      return response.data.data;
     } catch (error: any) {
       logger.error('External request failed', error, { service: 'CartService', requestType: 'GET', path: '/api/cart', success: false });
       this.handleError(error, 'fetching user cart');

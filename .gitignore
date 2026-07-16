@@ -9,3 +9,5 @@ order-service/dist/
 payment-service/dist/
 .env
 dist
+cart-service/.env
+
