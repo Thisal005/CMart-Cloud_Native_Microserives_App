@@ -65,10 +65,7 @@ export class OrderItem {
   validate(): void {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-    if (!this.orderId) {
-      throw new Error('Order ID is required');
-    }
-    if (!uuidRegex.test(this.orderId)) {
+    if (this.orderId && !uuidRegex.test(this.orderId)) {
       throw new Error('Order ID must be a valid UUID');
     }
 
