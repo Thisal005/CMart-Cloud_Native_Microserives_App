@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { requestIdMiddleware, requestLogger, errorHandler } from 'shared';
+import { requestIdMiddleware, requestLogger, errorHandler, createMonitoringRouter } from 'shared';
 import { logger } from './utils/logger';
 import { OrderRepository } from './repositories/order.repository';
 import { OrderItemRepository } from './repositories/order-item.repository';
@@ -9,6 +9,7 @@ import { ProductClient } from './clients/product.client';
 import { AuthClient } from './clients/auth.client';
 import { OrderService } from './services/order.service';
 import { OrderController } from './controllers/order.controller';
+import { AppDataSource } from './config/data-source';
 
 const app = express();
 
@@ -33,10 +34,23 @@ const orderService = new OrderService(
 );
 const orderController = new OrderController(orderService);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'UP', service: 'order-service' });
-});
+// Register Health, Readiness, and Version endpoints
+app.use('/', createMonitoringRouter('order-service', [
+  {
+    name: 'database',
+    check: async () => {
+      if (!AppDataSource.isInitialized) {
+        return { status: 'DOWN', details: { message: 'Database connection is not initialized' } };
+      }
+      try {
+        await AppDataSource.query('SELECT 1');
+        return { status: 'UP' };
+      } catch (err: any) {
+        return { status: 'DOWN', details: { message: err.message || 'Database query failed' } };
+      }
+    }
+  }
+]));
 
 // Register routes
 app.use('/api/orders', orderController.router);
