@@ -20,3 +20,7 @@ __exportStar(require("./middleware"), exports);
 __exportStar(require("./logging"), exports);
 __exportStar(require("./constants"), exports);
 __exportStar(require("./utils"), exports);
+__exportStar(require("./utils/config-validator"), exports);
+__exportStar(require("./utils/request-context"), exports);
+__exportStar(require("./client"), exports);
+__exportStar(require("./utils/monitoring"), exports);

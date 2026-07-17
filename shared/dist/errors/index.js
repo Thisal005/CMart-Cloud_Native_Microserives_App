@@ -73,6 +73,23 @@ class InternalServerError extends AppError {
     }
 }
 exports.InternalServerError = InternalServerError;
+const getServiceName = () => {
+    if (process.env.SERVICE_NAME) {
+        return process.env.SERVICE_NAME;
+    }
+    const cwd = process.cwd();
+    if (cwd.includes('auth-service'))
+        return 'auth-service';
+    if (cwd.includes('product-service'))
+        return 'product-service';
+    if (cwd.includes('cart-service'))
+        return 'cart-service';
+    if (cwd.includes('order-service'))
+        return 'order-service';
+    if (cwd.includes('payment-service'))
+        return 'payment-service';
+    return 'CMartService';
+};
 /**
  * Global Express Error Handling Middleware.
  * Standardizes error responses across all microservices.
@@ -80,29 +97,65 @@ exports.InternalServerError = InternalServerError;
 const errorHandler = (err, req, res, next) => {
     let statusCode = constants_1.HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
-    let errors = undefined;
+    let details = null;
+    let code = 'INTERNAL_SERVER_ERROR';
     // Check if it's a known custom operational error
-    if (err instanceof AppError) {
+    if (err instanceof ValidationError) {
         statusCode = err.statusCode;
         message = err.message;
-        errors = err.errors;
+        details = err.errors || null;
+        code = 'VALIDATION_ERROR';
+    }
+    else if (err instanceof AuthenticationError) {
+        statusCode = err.statusCode;
+        message = err.message;
+        code = 'UNAUTHORIZED';
+    }
+    else if (err instanceof AuthorizationError) {
+        statusCode = err.statusCode;
+        message = err.message;
+        code = 'FORBIDDEN';
+    }
+    else if (err instanceof NotFoundError) {
+        statusCode = err.statusCode;
+        message = err.message;
+        code = 'NOT_FOUND';
+    }
+    else if (err instanceof ConflictError) {
+        statusCode = err.statusCode;
+        message = err.message;
+        code = 'CONFLICT';
+    }
+    else if (err instanceof AppError) {
+        statusCode = err.statusCode;
+        message = err.message;
+        details = err.errors || null;
+        code = err.statusCode === constants_1.HttpStatus.BAD_REQUEST ? 'VALIDATION_ERROR' : 'INTERNAL_SERVER_ERROR';
     }
     else if (err instanceof Error) {
-        // Check if it's a standard error that should be mapped, or if we just keep default
         message = err.message;
     }
     else if (typeof err === 'string') {
         message = err;
     }
-    const requestId = req.requestId;
+    const requestId = req.requestId || null;
     // Set response headers and send standard error format
     res.status(statusCode).json({
+        status: statusCode,
         success: false,
         message,
-        error: message,
-        ...(errors && { errors }),
+        code,
         timestamp: new Date().toISOString(),
-        ...(requestId && { requestId }),
+        requestId,
+        details,
+        error: {
+            code,
+            message,
+            service: getServiceName(),
+            timestamp: new Date().toISOString(),
+            requestId,
+            details,
+        },
     });
 };
 exports.errorHandler = errorHandler;

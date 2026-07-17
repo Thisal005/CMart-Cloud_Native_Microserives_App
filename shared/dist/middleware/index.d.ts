@@ -23,7 +23,7 @@ export declare const authMiddleware: (jwtSecret: string) => (req: AuthenticatedR
  */
 export declare const requireRole: (allowedRoles: string[]) => (req: AuthenticatedRequest, res: Response, next: NextFunction) => void;
 /**
- * Middleware to trace each request with a unique ID
+ * Middleware to trace each request with a unique ID and initialize request context.
  */
 export declare const requestIdMiddleware: (req: Request, res: Response, next: NextFunction) => void;
 /**

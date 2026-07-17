@@ -11,6 +11,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const errors_1 = require("../errors");
 const utils_1 = require("../utils");
 const logging_1 = require("../logging");
+const request_context_1 = require("../utils/request-context");
 const validationLogger = new logging_1.Logger('validation-middleware');
 /**
  * Reusable JWT authentication middleware creator
@@ -58,13 +59,22 @@ const requireRole = (allowedRoles) => {
 };
 exports.requireRole = requireRole;
 /**
- * Middleware to trace each request with a unique ID
+ * Middleware to trace each request with a unique ID and initialize request context.
  */
 const requestIdMiddleware = (req, res, next) => {
     const requestId = (req.headers['x-request-id'] || req.headers['x-correlation-id'] || (0, utils_1.generateRandomId)());
+    const correlationId = (req.headers['x-correlation-id'] || requestId);
     req.requestId = requestId;
     res.setHeader('x-request-id', requestId);
-    next();
+    res.setHeader('x-correlation-id', correlationId);
+    request_context_1.requestContext.run({
+        get requestId() { return req.requestId || requestId; },
+        get correlationId() { return (req.headers['x-correlation-id'] || req.requestId || requestId); },
+        get token() { return (0, utils_1.extractBearerToken)(req.headers.authorization); },
+        get userId() { return req.user?.id; }
+    }, () => {
+        next();
+    });
 };
 exports.requestIdMiddleware = requestIdMiddleware;
 /**
