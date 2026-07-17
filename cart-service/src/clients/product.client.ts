@@ -1,26 +1,26 @@
-import axios from 'axios';
-import { NotFoundError, ValidationError, InternalServerError } from 'shared';
+import { ApiClient } from 'shared';
 import { ProductExternalDto } from '../types/product-external.dto';
 import { config } from '../config';
-import { logger } from '../utils/logger';
 
-export class ProductClient {
-  private baseUrl: string;
-
+export class ProductClient extends ApiClient {
   constructor() {
-    this.baseUrl = config.productServiceUrl;
+    super({
+      serviceName: 'ProductService',
+      baseUrl: config.productServiceUrl,
+      defaultTimeout: config.requestTimeout,
+      retryCount: config.httpRetryCount,
+      retryDelay: config.httpRetryDelay,
+    });
   }
 
   /**
    * Fetch product details by product ID from the Product Service.
    */
   public async getProductById(id: string): Promise<ProductExternalDto> {
-    try {
-      const response = await axios.get<any>(`${this.baseUrl}/api/products/${id}`);
-      return response.data.data;
-    } catch (error: any) {
-      this.handleError(error, `fetching product with ID ${id}`);
-    }
+    return this.request<ProductExternalDto>({
+      url: `/api/v1/products/${id}`,
+      method: 'GET',
+    });
   }
 
   /**
@@ -49,28 +49,5 @@ export class ProductClient {
     } catch (error) {
       return false;
     }
-  }
-
-  /**
-   * Maps Axios exceptions to standard shared application error structures.
-   */
-  private handleError(error: any, action: string): never {
-    if (error.response) {
-      const status = error.response.status;
-      const message = error.response.data?.error || error.message;
-
-      logger.warn(`Product client error during ${action}: [Status ${status}] ${message}`);
-
-      if (status === 404) {
-        throw new NotFoundError(`Product not found: ${message}`);
-      }
-      if (status === 400) {
-        throw new ValidationError(`Validation failed: ${message}`);
-      }
-      throw new InternalServerError(`Product Service returned unexpected status ${status} during ${action}`);
-    }
-
-    logger.error(`Product client communication failure during ${action}: ${error.message}`, error);
-    throw new InternalServerError(`Failed to communicate with Product Service during ${action}`);
   }
 }
