@@ -72,8 +72,8 @@ describe('PaymentService Unit Tests', () => {
       updateOrderStatus: jest.fn().mockResolvedValue({}),
     } as any;
 
-    // Disable gateway mock delays in test contexts
-    mockGateway = new MockGateway({ forceDelayMs: 0 });
+    // Disable gateway mock delays and failures in test contexts
+    mockGateway = new MockGateway({ forceDelayMs: 0, failureRate: 0 });
 
     paymentService = new PaymentService(
       paymentRepository as any,

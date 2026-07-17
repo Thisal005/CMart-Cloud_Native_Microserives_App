@@ -3,8 +3,45 @@ import { AuthClient } from '../../clients/auth.client';
 import { OrderClient } from '../../clients/order.client';
 import { AuthenticationError, NotFoundError, InternalServerError, ValidationError } from 'shared';
 
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+jest.mock('axios', () => {
+  const mockInstance: any = {
+    interceptors: {
+      request: { use: jest.fn(), eject: jest.fn() },
+      response: { use: jest.fn(), eject: jest.fn() },
+    },
+    request: async (config: any): Promise<any> => {
+      const method = (config.method || 'get').toLowerCase();
+      let res;
+      if (method === 'get') {
+        res = await mockInstance.get(config.url, config);
+      } else if (method === 'post') {
+        res = await mockInstance.post(config.url, config.data || {}, config);
+      } else if (method === 'patch') {
+        res = await mockInstance.patch(config.url, config.data || {}, config);
+      } else if (method === 'delete') {
+        res = await mockInstance.delete(config.url, config);
+      } else {
+        res = {};
+      }
+      return res;
+    },
+    get: jest.fn(),
+    post: jest.fn(),
+    patch: jest.fn(),
+    delete: jest.fn(),
+  };
+  return {
+    __esModule: true,
+    default: {
+      create: (...args: any[]) => mockInstance,
+      ...mockInstance,
+    },
+    create: (...args: any[]) => mockInstance,
+    ...mockInstance,
+  };
+});
+
+const mockedAxios = axios as any;
 
 describe('External Clients Unit Tests', () => {
   beforeEach(() => {
@@ -27,7 +64,7 @@ describe('External Clients Unit Tests', () => {
       const result = await authClient.validateToken('valid-token');
 
       expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/validate'),
+        expect.stringContaining('/api/v1/auth/validate'),
         {},
         expect.objectContaining({
           headers: { Authorization: 'Bearer valid-token' },
@@ -76,7 +113,7 @@ describe('External Clients Unit Tests', () => {
       const result = await authClient.getProfile('valid-token');
 
       expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/me'),
+        expect.stringContaining('/api/v1/auth/me'),
         expect.objectContaining({
           headers: { Authorization: 'Bearer valid-token' },
         })
@@ -101,7 +138,7 @@ describe('External Clients Unit Tests', () => {
       const result = await orderClient.getOrder('order-123', 'token-abc');
 
       expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/orders/order-123'),
+        expect.stringContaining('/api/v1/orders/order-123'),
         expect.objectContaining({
           headers: { Authorization: 'Bearer token-abc' },
         })
@@ -142,7 +179,7 @@ describe('External Clients Unit Tests', () => {
       const result = await orderClient.updateOrderStatus('order-123', 'PAID', 'token-abc');
 
       expect(mockedAxios.patch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/orders/order-123/status'),
+        expect.stringContaining('/api/v1/orders/order-123/status'),
         { status: 'PAID' },
         expect.objectContaining({
           headers: { Authorization: 'Bearer token-abc' },
