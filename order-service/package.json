@@ -18,7 +18,8 @@
     "axios": "^1.6.8",
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.30",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "shared": "*"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

@@ -1,0 +1,1435 @@
+openapi: 3.0.0
+info:
+  title: CMart Cloud-Native E-Commerce Platform API
+  description: |
+    Canonical REST API contract specifications for the CMart microservices suite.
+    All public endpoints are versioned and follow identical payload wrapper formats and standardized error responses.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Auth Service
+  - url: http://localhost:3002/api/v1
+    description: Product Service
+  - url: http://localhost:3003/api/v1
+    description: Cart Service
+  - url: http://localhost:3004/api/v1
+    description: Order Service
+  - url: http://localhost:3005/api/v1
+    description: Payment Service
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ---------------------------------------------------------------------------
+  # Auth Service Paths
+  # ---------------------------------------------------------------------------
+  /auth/register:
+    post:
+      summary: Register a new user
+      security: []
+      tags:
+        - Auth Service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+
+  /auth/login:
+    post:
+      summary: User Login
+      security: []
+      tags:
+        - Auth Service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+  /auth/validate:
+    post:
+      summary: Validate Access Token
+      security: []
+      tags:
+        - Auth Service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: JWT access token to validate
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenValidateSuccessResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+  /auth/me:
+    get:
+      summary: Get User Profile
+      tags:
+        - Auth Service
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileSuccessResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+  /auth/refresh-token:
+    post:
+      summary: Refresh Access Token
+      security: []
+      tags:
+        - Auth Service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefreshSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+  /auth/logout:
+    post:
+      summary: Revoke session and logout
+      security: []
+      tags:
+        - Auth Service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessNoDataResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+
+  # ---------------------------------------------------------------------------
+  # Product Service Paths
+  # ---------------------------------------------------------------------------
+  /products:
+    get:
+      summary: Retrieve products catalog
+      security: []
+      tags:
+        - Product Service
+      parameters:
+        - name: searchTerm
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Catalog retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductsPaginatedResponse'
+
+    post:
+      summary: Create a product (Admin only)
+      tags:
+        - Product Service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+
+  /products/{id}:
+    get:
+      summary: Get product by ID
+      security: []
+      tags:
+        - Product Service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSuccessResponse'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+    put:
+      summary: Update a product (Admin only)
+      tags:
+        - Product Service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+    delete:
+      summary: Delete a product (Admin only)
+      tags:
+        - Product Service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product soft-deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessNoDataResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  # ---------------------------------------------------------------------------
+  # Cart Service Paths
+  # ---------------------------------------------------------------------------
+  /cart:
+    get:
+      summary: Retrieve authenticated user's cart
+      tags:
+        - Cart Service
+      responses:
+        '200':
+          description: Cart retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartSuccessResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+    delete:
+      summary: Clear entire cart
+      tags:
+        - Cart Service
+      responses:
+        '200':
+          description: Cart cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessNoDataResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+  /cart/items:
+    post:
+      summary: Add an item to cart
+      tags:
+        - Cart Service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToCartRequest'
+      responses:
+        '200':
+          description: Item added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  /cart/items/{itemId}:
+    put:
+      summary: Update quantity of a cart item
+      tags:
+        - Cart Service
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - quantity
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 1
+      responses:
+        '200':
+          description: Quantity updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+    delete:
+      summary: Remove item from cart
+      tags:
+        - Cart Service
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Item removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartSuccessResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  # ---------------------------------------------------------------------------
+  # Order Service Paths
+  # ---------------------------------------------------------------------------
+  /orders:
+    get:
+      summary: Get user orders (or all orders for Admins)
+      tags:
+        - Order Service
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdersPaginatedResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+    post:
+      summary: Create a new order from active cart
+      tags:
+        - Order Service
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+  /orders/{id}:
+    get:
+      summary: Retrieve order by ID
+      tags:
+        - Order Service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderSuccessResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  /orders/{id}/status:
+    patch:
+      summary: Update order status (Admin only)
+      tags:
+        - Order Service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [PENDING, PAYMENT_PENDING, PAID, PAYMENT_FAILED, PROCESSING, CANCELLED, COMPLETED]
+      responses:
+        '200':
+          description: Order status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  # ---------------------------------------------------------------------------
+  # Payment Service Paths
+  # ---------------------------------------------------------------------------
+  /payments:
+    get:
+      summary: Get payment history
+      tags:
+        - Payment Service
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, SUCCESS, FAILED, REFUNDED]
+        - name: userId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payments retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsPaginatedResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+    post:
+      summary: Process payment for an order
+      tags:
+        - Payment Service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessPaymentRequest'
+      responses:
+        '201':
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  /payments/{id}:
+    get:
+      summary: Get payment details by ID
+      tags:
+        - Payment Service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Payment details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSuccessResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  /payments/order/{orderId}:
+    get:
+      summary: Get payment history for an order
+      tags:
+        - Payment Service
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order payment history details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentListResponse'
+        '401':
+          $ref: '#/components/responses/401Error'
+
+  /payments/{id}/refund:
+    post:
+      summary: Refund a processed payment
+      tags:
+        - Payment Service
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  description: Optional amount to refund (defaults to full amount)
+      responses:
+        '200':
+          description: Refund processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSuccessResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    400Error:
+      description: Validation/Request details invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 400
+            success: false
+            message: "Validation failed"
+            code: "VALIDATION_ERROR"
+            timestamp: "2026-07-17T14:06:30Z"
+            requestId: "f4db7d55-8db6-4444-be1f-110cf9df28e2"
+            details:
+              email: "Invalid email format"
+    401Error:
+      description: Access token missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 401
+            success: false
+            message: "Authentication token is required"
+            code: "UNAUTHORIZED"
+            timestamp: "2026-07-17T14:06:30Z"
+            requestId: "c552a8a5-d8aa-41f8-9a3d-4cbf301e12ea"
+            details: null
+    403Error:
+      description: Unauthorized client permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 403
+            success: false
+            message: "You do not have permission to access this resource"
+            code: "FORBIDDEN"
+            timestamp: "2026-07-17T14:06:30Z"
+            requestId: "1ccf8dfc-dbd8-4f11-bef2-efdfefcf3d3c"
+            details: null
+    404Error:
+      description: Requested item not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 404
+            success: false
+            message: "Resource not found"
+            code: "NOT_FOUND"
+            timestamp: "2026-07-17T14:06:30Z"
+            requestId: "2fdc0cd5-9dbd-424a-9eb8-bcbfecdf78de"
+            details: null
+    409Error:
+      description: Request conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: 409
+            success: false
+            message: "Email already exists"
+            code: "CONFLICT"
+            timestamp: "2026-07-17T14:06:30Z"
+            requestId: "4bcfc7db-cd88-4100-8c22-b9cfdfef28d9"
+            details: null
+
+  schemas:
+    # Requests
+    RegisterRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minimum: 8
+        phoneNumber:
+          type: string
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    CreateProductRequest:
+      type: object
+      required:
+        - name
+        - price
+        - stock
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        stock:
+          type: integer
+          minimum: 0
+
+    AddToCartRequest:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+
+    CreateOrderRequest:
+      type: object
+      properties:
+        shippingAddress:
+          type: string
+        notes:
+          type: string
+
+    ProcessPaymentRequest:
+      type: object
+      required:
+        - orderId
+        - paymentMethod
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        paymentMethod:
+          type: string
+          enum: [CARD, BANK_TRANSFER, WALLET]
+        amount:
+          type: number
+          minimum: 0.01
+        cardNumber:
+          type: string
+        currency:
+          type: string
+          default: USD
+
+    # Standard Success Wrappers
+    SuccessNoDataResponse:
+      type: object
+      required:
+        - success
+        - message
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation successful"
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    AuthSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          type: object
+          required:
+            - token
+            - refreshToken
+            - user
+          properties:
+            token:
+              type: string
+            refreshToken:
+              type: string
+            user:
+              $ref: '#/components/schemas/UserDto'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    TokenValidateSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          type: object
+          required:
+            - valid
+            - user
+          properties:
+            valid:
+              type: boolean
+            user:
+              $ref: '#/components/schemas/UserDto'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    TokenRefreshSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          type: object
+          required:
+            - token
+            - refreshToken
+          properties:
+            token:
+              type: string
+            refreshToken:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    ProfileSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/UserDto'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    ProductSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/ProductDto'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    CartSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/CartDto'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    OrderSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/OrderDto'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    PaymentSuccessResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/PaymentDto'
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    PaymentListResponse:
+      type: object
+      required:
+        - success
+        - data
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentDto'
+        timestamp:
+          type: string
+          format: date-time
+
+    # Pagination Success Wrappers
+    ProductsPaginatedResponse:
+      type: object
+      required:
+        - success
+        - data
+        - pagination
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductDto'
+        pagination:
+          $ref: '#/components/schemas/PaginationMetadata'
+        timestamp:
+          type: string
+          format: date-time
+
+    OrdersPaginatedResponse:
+      type: object
+      required:
+        - success
+        - data
+        - pagination
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderDto'
+        pagination:
+          $ref: '#/components/schemas/PaginationMetadata'
+        timestamp:
+          type: string
+          format: date-time
+
+    PaymentsPaginatedResponse:
+      type: object
+      required:
+        - success
+        - data
+        - pagination
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentDto'
+        pagination:
+          $ref: '#/components/schemas/PaginationMetadata'
+        timestamp:
+          type: string
+          format: date-time
+
+    # Common DTOs
+    UserDto:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - role
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          example: USER
+        status:
+          type: string
+          example: ACTIVE
+        emailVerified:
+          type: boolean
+
+    ProductDto:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - price
+        - stock
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        stock:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    CartDto:
+      type: object
+      required:
+        - id
+        - userId
+        - items
+        - totalAmount
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItemDto'
+        totalAmount:
+          type: number
+
+    CartItemDto:
+      type: object
+      required:
+        - id
+        - productId
+        - quantity
+        - unitPrice
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+
+    OrderDto:
+      type: object
+      required:
+        - id
+        - userId
+        - status
+        - items
+        - subtotal
+        - totalAmount
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, PAID, PAYMENT_FAILED, PROCESSING, CANCELLED, COMPLETED]
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemDto'
+        subtotal:
+          type: number
+        totalAmount:
+          type: number
+        transactionId:
+          type: string
+          nullable: true
+        shippingAddress:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    OrderItemDto:
+      type: object
+      required:
+        - id
+        - productId
+        - productName
+        - quantity
+        - unitPrice
+        - subtotal
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        subtotal:
+          type: number
+
+    PaymentDto:
+      type: object
+      required:
+        - id
+        - orderId
+        - amount
+        - status
+        - transactionReference
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [PENDING, SUCCESS, FAILED, REFUNDED]
+        transactionReference:
+          type: string
+
+    PaginationMetadata:
+      type: object
+      required:
+        - page
+        - limit
+        - totalItems
+        - totalPages
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalItems:
+          type: integer
+        totalPages:
+          type: integer
+
+    # Base Error Response Schema
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - success
+        - message
+        - code
+        - timestamp
+        - requestId
+        - details
+      properties:
+        status:
+          type: integer
+          description: HTTP status code
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          description: User-friendly error message description
+        code:
+          type: string
+          description: Standardized error code identifier
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Unique correlation request tracking ID
+        details:
+          type: object
+          nullable: true
+          description: Additional validation breakdown or specific field failure descriptions

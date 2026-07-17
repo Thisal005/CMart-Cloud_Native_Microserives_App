@@ -9,6 +9,8 @@ export interface LogPayload {
     level: LogLevel;
     service: string;
     message: string;
+    requestId?: string;
+    correlationId?: string;
     meta?: Record<string, any>;
 }
 export declare class Logger {

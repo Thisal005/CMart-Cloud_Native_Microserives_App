@@ -15,6 +15,7 @@
     "start": "concurrently -k -p \"[{name}]\" -n \"auth,prod,cart,order,pay\" -c \"yellow,blue,green,magenta,cyan\" \"npm run dev -w auth-service\" \"npm run dev -w product-service\" \"npm run dev -w cart-service\" \"npm run dev -w order-service\" \"npm run dev -w payment-service\""
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "typed-array-buffer": "^1.0.3"
   }
 }

@@ -5,8 +5,8 @@ require("reflect-metadata");
 const typeorm_1 = require("typeorm");
 const path_1 = require("path");
 const index_1 = require("./index");
-const user_1 = require("../model/user");
-const refresh_token_1 = require("../model/refresh-token");
+const user_1 = require("../models/user");
+const refresh_token_1 = require("../models/refresh-token");
 exports.AppDataSource = new typeorm_1.DataSource({
     type: 'postgres',
     url: index_1.config.databaseUrl,

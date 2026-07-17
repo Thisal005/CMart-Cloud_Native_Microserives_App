@@ -7,7 +7,14 @@ product-service/dist/
 product-service/dist/
 order-service/dist/
 payment-service/dist/
-.env
+shared/dist/
 dist
+.env
 cart-service/.env
 
+cart-service/dist/app.js
+
+shared/dist/middleware/
+shared/dist/response/
+auth-service/.env
+cart-service/.env

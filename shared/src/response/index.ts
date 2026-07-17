@@ -6,8 +6,18 @@ export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   data?: T;
-  errors?: any;
   timestamp: string;
+  requestId?: string;
+}
+
+export interface ApiErrorResponse {
+  status: number;
+  success: boolean;
+  message: string;
+  code: string;
+  timestamp: string;
+  requestId: string | null;
+  details: any | null;
 }
 
 export interface PaginationMetadata {
@@ -25,24 +35,28 @@ export class ApiResponseHelper {
   /**
    * Format a successful operation response
    */
-  static success<T>(data: T, message?: string): ApiResponse<T> {
+  static success<T>(data: T, message?: string, req?: any): ApiResponse<T> {
+    const requestId = typeof req === 'string' ? req : req?.requestId;
     return {
       success: true,
       message,
       data,
       timestamp: new Date().toISOString(),
+      ...(requestId && { requestId }),
     };
   }
 
   /**
    * Format an error response
    */
-  static error(message: string, errors?: any): ApiResponse<null> {
+  static error(message: string, errors?: any, req?: any): ApiResponse<null> {
+    const requestId = typeof req === 'string' ? req : req?.requestId;
     return {
       success: false,
       message,
       errors,
       timestamp: new Date().toISOString(),
+      ...(requestId && { requestId }),
     };
   }
 
@@ -54,9 +68,11 @@ export class ApiResponseHelper {
     page: number,
     limit: number,
     totalItems: number,
-    message?: string
+    message?: string,
+    req?: any
   ): PaginatedResponse<T> {
     const totalPages = Math.ceil(totalItems / limit);
+    const requestId = typeof req === 'string' ? req : req?.requestId;
     return {
       success: true,
       message,
@@ -68,6 +84,7 @@ export class ApiResponseHelper {
         totalPages,
       },
       timestamp: new Date().toISOString(),
+      ...(requestId && { requestId }),
     };
   }
 }

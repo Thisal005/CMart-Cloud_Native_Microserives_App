@@ -1,13 +1,30 @@
 import dotenv from 'dotenv';
+import { validateEnv } from 'shared';
 
 dotenv.config();
 
-export const config = {
-  port: parseInt(process.env.PORT || '3001', 10),
-  jwtSecret: process.env.JWT_SECRET || 'cmart-default-secret-key-1234567890-xyz',
-  jwtExpiration: process.env.JWT_EXPIRATION || '15m',
-  jwtRefreshExpirationDays: parseInt(process.env.JWT_REFRESH_EXPIRATION_DAYS || '7', 10),
-  bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10),
-  databaseUrl: process.env.DATABASE_URL || '',
-};
+const envSchema = {
+  PORT: { type: 'number', required: false, default: 3001 },
+  NODE_ENV: { type: 'string', required: false, default: 'development', choices: ['development', 'production', 'test'] },
+  DATABASE_URL: { type: 'string', required: true },
+  JWT_SECRET: { type: 'string', required: false, default: 'cmart-default-secret-key-1234567890-xyz' },
+  JWT_EXPIRES_IN: { type: 'string', required: false, default: '15m' },
+  JWT_REFRESH_EXPIRES_DAYS: { type: 'number', required: false, default: 7 },
+  BCRYPT_SALT_ROUNDS: { type: 'number', required: false, default: 12 },
+  LOG_LEVEL: { type: 'string', required: false, default: 'INFO', choices: ['DEBUG', 'INFO', 'WARN', 'ERROR'] },
+  CORS_ORIGIN: { type: 'string', required: false, default: '*' },
+} as const;
 
+const env = validateEnv<any>(envSchema);
+
+export const config = {
+  port: env.PORT,
+  nodeEnv: env.NODE_ENV,
+  databaseUrl: env.DATABASE_URL,
+  jwtSecret: env.JWT_SECRET,
+  jwtExpiration: env.JWT_EXPIRES_IN,
+  jwtRefreshExpirationDays: env.JWT_REFRESH_EXPIRES_DAYS,
+  bcryptSaltRounds: env.BCRYPT_SALT_ROUNDS,
+  logLevel: env.LOG_LEVEL,
+  corsOrigin: env.CORS_ORIGIN,
+};

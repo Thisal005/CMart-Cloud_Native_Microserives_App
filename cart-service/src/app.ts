@@ -1,26 +1,41 @@
 import express from 'express';
 import cors from 'cors';
-import { requestLogger } from './middleware/logging.middleware';
-import { errorHandler } from './middleware/error.middleware';
-import { CartRepository } from './repository/cart.repository';
-import { CartService } from './service/cart.service';
-import { CartController } from './controller/cart.controller';
+import { requestIdMiddleware, requestLogger, errorHandler, createMonitoringRouter } from 'shared';
+import { logger } from './utils/logger';
+import { CartRepository } from './repositories/cart.repository';
+import { CartService } from './services/cart.service';
+import { CartController } from './controllers/cart.controller';
+import { AppDataSource } from './config/data-source';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(requestLogger);
+app.use(requestIdMiddleware);
+app.use(requestLogger(logger));
 
 // Initialize dependencies
 const cartRepository = new CartRepository();
 const cartService = new CartService(cartRepository);
 const cartController = new CartController(cartService);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'UP', service: 'cart-service' });
-});
+// Register Health, Readiness, and Version endpoints
+app.use('/', createMonitoringRouter('cart-service', [
+  {
+    name: 'database',
+    check: async () => {
+      if (!AppDataSource.isInitialized) {
+        return { status: 'DOWN', details: { message: 'Database connection is not initialized' } };
+      }
+      try {
+        await AppDataSource.query('SELECT 1');
+        return { status: 'UP' };
+      } catch (err: any) {
+        return { status: 'DOWN', details: { message: err.message || 'Database query failed' } };
+      }
+    }
+  }
+]));
 
 // Register routes
 app.use('/api/cart', cartController.router);

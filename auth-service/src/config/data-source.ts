@@ -2,8 +2,8 @@ import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import { join } from 'path';
 import { config } from './index';
-import { User } from '../model/user';
-import { RefreshToken } from '../model/refresh-token';
+import { User } from '../models/user';
+import { RefreshToken } from '../models/refresh-token';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',

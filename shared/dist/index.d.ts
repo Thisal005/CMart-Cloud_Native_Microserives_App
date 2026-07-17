@@ -4,3 +4,7 @@ export * from './middleware';
 export * from './logging';
 export * from './constants';
 export * from './utils';
+export * from './utils/config-validator';
+export * from './utils/request-context';
+export * from './client';
+export * from './utils/monitoring';
