@@ -3,10 +3,10 @@
  * Uses native fetch (available in Node.js 18+) to test the microservices.
  */
 
-const AUTH_URL = 'http://localhost:3001/api/auth';
-const PRODUCT_URL = 'http://localhost:3002/api/products';
-const CART_URL = 'http://localhost:3003/api/cart';
-const ORDER_URL = 'http://localhost:3004/api/orders';
+const AUTH_URL = 'http://localhost:3001/api/v1/auth';
+const PRODUCT_URL = 'http://localhost:3002/api/v1/products';
+const CART_URL = 'http://localhost:3003/api/v1/cart';
+const ORDER_URL = 'http://localhost:3004/api/v1/orders';
 
 // Helper for making requests with authentication
 async function request(url, method = 'GET', body = null, token = null) {
