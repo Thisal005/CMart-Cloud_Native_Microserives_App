@@ -1,3 +1,5 @@
+import { getRequestContext } from '../utils/request-context';
+
 export enum LogLevel {
   INFO = 'INFO',
   WARN = 'WARN',
@@ -10,6 +12,8 @@ export interface LogPayload {
   level: LogLevel;
   service: string;
   message: string;
+  requestId?: string;
+  correlationId?: string;
   meta?: Record<string, any>;
 }
 
@@ -24,11 +28,31 @@ export class Logger {
    * Helper to write structured JSON log entries
    */
   private log(level: LogLevel, message: string, meta?: Record<string, any>) {
+    const LEVEL_SEVERITY: Record<LogLevel, number> = {
+      [LogLevel.DEBUG]: 0,
+      [LogLevel.INFO]: 1,
+      [LogLevel.WARN]: 2,
+      [LogLevel.ERROR]: 3,
+    };
+
+    const configLevel = (process.env.LOG_LEVEL || 'INFO').toUpperCase() as LogLevel;
+    const currentSeverity = LEVEL_SEVERITY[level] !== undefined ? LEVEL_SEVERITY[level] : 1;
+    const configSeverity = LEVEL_SEVERITY[configLevel] !== undefined ? LEVEL_SEVERITY[configLevel] : 1;
+
+    if (currentSeverity < configSeverity) {
+      return;
+    }
+
+    const context = getRequestContext();
     const logEntry: LogPayload = {
       timestamp: new Date().toISOString(),
       level,
       service: this.serviceName,
       message,
+      ...(context && {
+        requestId: context.requestId,
+        correlationId: context.correlationId,
+      }),
       ...(meta && { meta }),
     };
 

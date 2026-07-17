@@ -6,9 +6,18 @@ export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   data?: T;
-  errors?: any;
   timestamp: string;
   requestId?: string;
+}
+
+export interface ApiErrorResponse {
+  status: number;
+  success: boolean;
+  message: string;
+  code: string;
+  timestamp: string;
+  requestId: string | null;
+  details: any | null;
 }
 
 export interface PaginationMetadata {

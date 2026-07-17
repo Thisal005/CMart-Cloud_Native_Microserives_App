@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthenticationError, AuthorizationError, ValidationError } from '../errors';
-import { generateRandomId } from '../utils';
+import { generateRandomId, extractBearerToken } from '../utils';
 import { Logger } from '../logging';
+import { requestContext } from '../utils/request-context';
 
 const validationLogger = new Logger('validation-middleware');
 
@@ -69,13 +70,23 @@ export const requireRole = (allowedRoles: string[]) => {
 };
 
 /**
- * Middleware to trace each request with a unique ID
+ * Middleware to trace each request with a unique ID and initialize request context.
  */
 export const requestIdMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const requestId = (req.headers['x-request-id'] || req.headers['x-correlation-id'] || generateRandomId()) as string;
+  const correlationId = (req.headers['x-correlation-id'] || requestId) as string;
   (req as any).requestId = requestId;
   res.setHeader('x-request-id', requestId);
-  next();
+  res.setHeader('x-correlation-id', correlationId);
+
+  requestContext.run({
+    get requestId() { return (req as any).requestId || requestId; },
+    get correlationId() { return (req.headers['x-correlation-id'] || (req as any).requestId || requestId) as string; },
+    get token() { return extractBearerToken(req.headers.authorization); },
+    get userId() { return (req as any).user?.id; }
+  }, () => {
+    next();
+  });
 };
 
 /**
