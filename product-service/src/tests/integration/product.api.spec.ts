@@ -80,7 +80,7 @@ describe('Product API Integration Tests', () => {
 
       expect(response.status).toBe(404);
       expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('not found');
+      expect(response.body.message).toContain('not found');
     });
   });
 });
