@@ -15,3 +15,6 @@ cart-service/.env
 cart-service/dist/app.js
 
 shared/dist/middleware/
+shared/dist/response/
+auth-service/.env
+cart-service/.env
