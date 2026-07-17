@@ -1,20 +1,21 @@
 import express from 'express';
 import cors from 'cors';
-import { requestLogger } from './middleware/logging.middleware';
-import { errorHandler } from './middleware/error.middleware';
-import { OrderRepository } from './repository/order.repository';
-import { OrderItemRepository } from './repository/order-item.repository';
-import { CartClient } from './client/cart.client';
-import { ProductClient } from './client/product.client';
-import { AuthClient } from './client/auth.client';
-import { OrderService } from './service/order.service';
-import { OrderController } from './controller/order.controller';
+import { requestIdMiddleware, requestLogger, errorHandler } from 'shared';
+import { logger } from './utils/logger';
+import { OrderRepository } from './repositories/order.repository';
+import { OrderItemRepository } from './repositories/order-item.repository';
+import { CartClient } from './clients/cart.client';
+import { ProductClient } from './clients/product.client';
+import { AuthClient } from './clients/auth.client';
+import { OrderService } from './services/order.service';
+import { OrderController } from './controllers/order.controller';
 
 const app = express();
-/* this is a comment */
+
 app.use(cors());
 app.use(express.json());
-app.use(requestLogger);
+app.use(requestIdMiddleware);
+app.use(requestLogger(logger));
 
 // Initialize dependencies
 const orderRepository = new OrderRepository();

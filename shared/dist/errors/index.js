@@ -94,6 +94,7 @@ const errorHandler = (err, req, res, next) => {
     else if (typeof err === 'string') {
         message = err;
     }
+    const requestId = req.requestId;
     // Set response headers and send standard error format
     res.status(statusCode).json({
         success: false,
@@ -101,6 +102,7 @@ const errorHandler = (err, req, res, next) => {
         error: message,
         ...(errors && { errors }),
         timestamp: new Date().toISOString(),
+        ...(requestId && { requestId }),
     });
 };
 exports.errorHandler = errorHandler;

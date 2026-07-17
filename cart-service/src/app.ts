@@ -1,16 +1,17 @@
 import express from 'express';
 import cors from 'cors';
-import { requestLogger } from './middleware/logging.middleware';
-import { errorHandler } from './middleware/error.middleware';
-import { CartRepository } from './repository/cart.repository';
-import { CartService } from './service/cart.service';
-import { CartController } from './controller/cart.controller';
+import { requestIdMiddleware, requestLogger, errorHandler } from 'shared';
+import { logger } from './utils/logger';
+import { CartRepository } from './repositories/cart.repository';
+import { CartService } from './services/cart.service';
+import { CartController } from './controllers/cart.controller';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(requestLogger);
+app.use(requestIdMiddleware);
+app.use(requestLogger(logger));
 
 // Initialize dependencies
 const cartRepository = new CartRepository();

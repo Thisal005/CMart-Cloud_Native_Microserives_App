@@ -1,19 +1,20 @@
 import express from 'express';
 import cors from 'cors';
-import { requestLogger } from './middleware/logging.middleware';
-import { errorHandler } from './middleware/error.middleware';
-import { PaymentRepository } from './repository/payment.repository';
-import { PaymentService } from './service/payment.service';
-import { PaymentController } from './controller/payment.controller';
-import { MockGateway } from './gateway/mock.gateway';
-import { AuthClient } from './client/auth.client';
-import { OrderClient } from './client/order.client';
+import { requestIdMiddleware, requestLogger, errorHandler } from 'shared';
+import { logger } from './utils/logger';
+import { PaymentRepository } from './repositories/payment.repository';
+import { PaymentService } from './services/payment.service';
+import { PaymentController } from './controllers/payment.controller';
+import { MockGateway } from './gateways/mock.gateway';
+import { AuthClient } from './clients/auth.client';
+import { OrderClient } from './clients/order.client';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(requestLogger);
+app.use(requestIdMiddleware);
+app.use(requestLogger(logger));
 
 // Initialize dependencies
 const paymentRepository = new PaymentRepository();
