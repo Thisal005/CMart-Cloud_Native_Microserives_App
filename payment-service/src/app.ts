@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { requestIdMiddleware, requestLogger, errorHandler } from 'shared';
+import { requestIdMiddleware, requestLogger, errorHandler, createMonitoringRouter } from 'shared';
 import { logger } from './utils/logger';
 import { PaymentRepository } from './repositories/payment.repository';
 import { PaymentService } from './services/payment.service';
@@ -8,6 +8,7 @@ import { PaymentController } from './controllers/payment.controller';
 import { MockGateway } from './gateways/mock.gateway';
 import { AuthClient } from './clients/auth.client';
 import { OrderClient } from './clients/order.client';
+import { AppDataSource } from './config/data-source';
 
 const app = express();
 
@@ -30,10 +31,23 @@ const paymentService = new PaymentService(
 );
 const paymentController = new PaymentController(paymentService, orderClient);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ status: 'UP', service: 'payment-service' });
-});
+// Register Health, Readiness, and Version endpoints
+app.use('/', createMonitoringRouter('payment-service', [
+  {
+    name: 'database',
+    check: async () => {
+      if (!AppDataSource.isInitialized) {
+        return { status: 'DOWN', details: { message: 'Database connection is not initialized' } };
+      }
+      try {
+        await AppDataSource.query('SELECT 1');
+        return { status: 'UP' };
+      } catch (err: any) {
+        return { status: 'DOWN', details: { message: err.message || 'Database query failed' } };
+      }
+    }
+  }
+]));
 
 // Register routes
 app.use('/api/payments', paymentController.router);
