@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "c88f72a4-fbe7-4df3-aa86-7a8d50456df2",
 		"name": "CMart Microservices API",
-		"description": "Collection to test the CMart microservices (Auth, Product, Cart, Order, Payment)",
+		"description": "Comprehensive Collection to test all the CMart microservices endpoints (Auth, Product, Cart, Order, Payment)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -10,24 +10,28 @@
 			"name": "Auth Service",
 			"item": [
 				{
-					"name": "Health Check",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl_auth}}/health",
-							"host": [
-								"{{baseUrl_auth}}"
-							],
-							"path": [
-								"health"
-							]
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.collectionVariables.set(\"jwt_token\", jsonData.data.token);",
+									"        console.log(\"Saved jwt_token: \" + jsonData.data.token.substring(0, 15) + \"...\");",
+									"    }",
+									"    if (jsonData.data && jsonData.data.refreshToken) {",
+									"        pm.collectionVariables.set(\"refresh_token\", jsonData.data.refreshToken);",
+									"        console.log(\"Saved refresh_token: \" + jsonData.data.refreshToken.substring(0, 15) + \"...\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Register",
+					],
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -41,12 +45,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl_auth}}/api/auth/register",
+							"raw": "{{baseUrl_auth}}/api/v1/auth/register",
 							"host": [
 								"{{baseUrl_auth}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"auth",
 								"register"
 							]
@@ -55,7 +60,7 @@
 					"response": []
 				},
 				{
-					"name": "Login",
+					"name": "Login User",
 					"event": [
 						{
 							"listen": "test",
@@ -63,9 +68,13 @@
 								"exec": [
 									"if (pm.response.code === 200 || pm.response.code === 201) {",
 									"    var jsonData = pm.response.json();",
-									"    if (jsonData.token) {",
-									"        pm.environment.set(\"jwt_token\", jsonData.token);",
-									"        console.log(\"Saved jwt_token: \" + jsonData.token.substring(0, 15) + \"...\");",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.collectionVariables.set(\"jwt_token\", jsonData.data.token);",
+									"        console.log(\"Saved jwt_token: \" + jsonData.data.token.substring(0, 15) + \"...\");",
+									"    }",
+									"    if (jsonData.data && jsonData.data.refreshToken) {",
+									"        pm.collectionVariables.set(\"refresh_token\", jsonData.data.refreshToken);",
+									"        console.log(\"Saved refresh_token: \" + jsonData.data.refreshToken.substring(0, 15) + \"...\");",
 									"    }",
 									"}"
 								],
@@ -86,14 +95,41 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl_auth}}/api/auth/login",
+							"raw": "{{baseUrl_auth}}/api/v1/auth/login",
 							"host": [
 								"{{baseUrl_auth}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"auth",
 								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_auth}}/api/v1/auth/me",
+							"host": [
+								"{{baseUrl_auth}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"me"
 							]
 						}
 					},
@@ -103,13 +139,7 @@
 					"name": "Validate Token",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}",
-								"type": "text"
-							}
-						],
+						"header": [],
 						"body": {
 							"mode": "raw",
 							"raw": "{\n  \"token\": \"{{jwt_token}}\"\n}",
@@ -120,14 +150,145 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl_auth}}/api/auth/validate",
+							"raw": "{{baseUrl_auth}}/api/v1/auth/validate",
 							"host": [
 								"{{baseUrl_auth}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"auth",
 								"validate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.collectionVariables.set(\"jwt_token\", jsonData.data.token);",
+									"        console.log(\"Saved new jwt_token: \" + jsonData.data.token.substring(0, 15) + \"...\");",
+									"    }",
+									"    if (jsonData.data && jsonData.data.refreshToken) {",
+									"        pm.collectionVariables.set(\"refresh_token\", jsonData.data.refreshToken);",
+									"        console.log(\"Saved new refresh_token: \" + jsonData.data.refreshToken.substring(0, 15) + \"...\");",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_auth}}/api/v1/auth/refresh-token",
+							"host": [
+								"{{baseUrl_auth}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh-token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke and Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_auth}}/api/v1/auth/logout",
+							"host": [
+								"{{baseUrl_auth}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_auth}}/health",
+							"host": [
+								"{{baseUrl_auth}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Readiness Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_auth}}/ready",
+							"host": [
+								"{{baseUrl_auth}}"
+							],
+							"path": [
+								"ready"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Version Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_auth}}/version",
+							"host": [
+								"{{baseUrl_auth}}"
+							],
+							"path": [
+								"version"
 							]
 						}
 					},
@@ -138,6 +299,188 @@
 		{
 			"name": "Product Service",
 			"item": [
+				{
+					"name": "Search / List Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.length > 0) {",
+									"        pm.collectionVariables.set(\"productId\", jsonData.data[0].id);",
+									"        console.log(\"Saved productId: \" + jsonData.data[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_product}}/api/v1/products?searchTerm=mouse&page=1&limit=20",
+							"host": [
+								"{{baseUrl_product}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products"
+							],
+							"query": [
+								{
+									"key": "searchTerm",
+									"value": "mouse"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_product}}/api/v1/products/{{productId}}",
+							"host": [
+								"{{baseUrl_product}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product (Admin Only)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set(\"productId\", jsonData.data.id);",
+									"        console.log(\"Saved created productId: \" + jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Wireless Mouse\",\n  \"description\": \"Ergonomic wireless mouse with silent clicks.\",\n  \"category\": \"Electronics\",\n  \"sku\": \"EL-MOUS-WIRE-{{$randomInt}}\",\n  \"price\": 25.0,\n  \"stockQuantity\": 40,\n  \"imageUrl\": \"https://cdn.cmart.example/products/mouse.png\",\n  \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_product}}/api/v1/products",
+							"host": [
+								"{{baseUrl_product}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Product (Admin Only)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"price\": 22.5,\n  \"stockQuantity\": 35,\n  \"isActive\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_product}}/api/v1/products/{{productId}}",
+							"host": [
+								"{{baseUrl_product}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Product (Admin Only)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_product}}/api/v1/products/{{productId}}",
+							"host": [
+								"{{baseUrl_product}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"products",
+								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				},
 				{
 					"name": "Health Check",
 					"request": {
@@ -156,44 +499,108 @@
 					"response": []
 				},
 				{
-					"name": "Get All Products",
+					"name": "Readiness Check",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl_product}}/api/products",
+							"raw": "{{baseUrl_product}}/ready",
 							"host": [
 								"{{baseUrl_product}}"
 							],
 							"path": [
-								"api",
-								"products"
+								"ready"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Get Product by ID",
+					"name": "Version Check",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl_product}}/api/products/1",
+							"raw": "{{baseUrl_product}}/version",
 							"host": [
 								"{{baseUrl_product}}"
 							],
 							"path": [
+								"version"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cart Service",
+			"item": [
+				{
+					"name": "Get Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.items && jsonData.data.items.length > 0) {",
+									"        pm.collectionVariables.set(\"cartItemId\", jsonData.data.items[0].id);",
+									"        console.log(\"Saved cartItemId: \" + jsonData.data.items[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_cart}}/api/v1/cart",
+							"host": [
+								"{{baseUrl_cart}}"
+							],
+							"path": [
 								"api",
-								"products",
-								"1"
+								"v1",
+								"cart"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Create Product (Admin Only)",
+					"name": "Add Item to Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.items) {",
+									"        var item = jsonData.data.items.find(i => i.productId === pm.collectionVariables.get(\"productId\"));",
+									"        if (item) {",
+									"            pm.collectionVariables.set(\"cartItemId\", item.id);",
+									"            console.log(\"Saved cartItemId: \" + item.id);",
+									"        }",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -205,7 +612,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Premium Laptop\",\n  \"description\": \"16GB RAM, 512GB SSD, Core i7\",\n  \"price\": 1299.99,\n  \"stock\": 50\n}",
+							"raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -213,23 +620,108 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl_product}}/api/products",
+							"raw": "{{baseUrl_cart}}/api/v1/cart/items",
 							"host": [
-								"{{baseUrl_product}}"
+								"{{baseUrl_cart}}"
 							],
 							"path": [
 								"api",
-								"products"
+								"v1",
+								"cart",
+								"items"
 							]
 						}
 					},
 					"response": []
-				}
-			]
-		},
-		{
-			"name": "Cart Service",
-			"item": [
+				},
+				{
+					"name": "Update Cart Item Quantity",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_cart}}/api/v1/cart/items/{{cartItemId}}",
+							"host": [
+								"{{baseUrl_cart}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cart",
+								"items",
+								"{{cartItemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Item from Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_cart}}/api/v1/cart/items/{{cartItemId}}",
+							"host": [
+								"{{baseUrl_cart}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cart",
+								"items",
+								"{{cartItemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Entire Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_cart}}/api/v1/cart",
+							"host": [
+								"{{baseUrl_cart}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"cart"
+							]
+						}
+					},
+					"response": []
+				},
 				{
 					"name": "Health Check",
 					"request": {
@@ -248,118 +740,34 @@
 					"response": []
 				},
 				{
-					"name": "Get Cart",
+					"name": "Readiness Check",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}",
-								"type": "text"
-							}
-						],
+						"header": [],
 						"url": {
-							"raw": "{{baseUrl_cart}}/api/cart",
+							"raw": "{{baseUrl_cart}}/ready",
 							"host": [
 								"{{baseUrl_cart}}"
 							],
 							"path": [
-								"api",
-								"cart"
+								"ready"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Add to Cart",
+					"name": "Version Check",
 					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"productId\": \"1\",\n  \"quantity\": 2\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
+						"method": "GET",
+						"header": [],
 						"url": {
-							"raw": "{{baseUrl_cart}}/api/cart/items",
+							"raw": "{{baseUrl_cart}}/version",
 							"host": [
 								"{{baseUrl_cart}}"
 							],
 							"path": [
-								"api",
-								"cart",
-								"items"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Update Cart Item",
-					"request": {
-						"method": "PUT",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"productId\": \"1\",\n  \"quantity\": 5\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl_cart}}/api/cart/items",
-							"host": [
-								"{{baseUrl_cart}}"
-							],
-							"path": [
-								"api",
-								"cart",
-								"items"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Remove from Cart",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl_cart}}/api/cart/items/1",
-							"host": [
-								"{{baseUrl_cart}}"
-							],
-							"path": [
-								"api",
-								"cart",
-								"items",
-								"1"
+								"version"
 							]
 						}
 					},
@@ -371,24 +779,24 @@
 			"name": "Order Service",
 			"item": [
 				{
-					"name": "Health Check",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl_order}}/health",
-							"host": [
-								"{{baseUrl_order}}"
-							],
-							"path": [
-								"health"
-							]
+					"name": "Checkout / Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set(\"orderId\", jsonData.data.id);",
+									"        console.log(\"Saved orderId: \" + jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
 						}
-					},
-					"response": []
-				},
-				{
-					"name": "Checkout (Simulated Success)",
+					],
 					"request": {
 						"method": "POST",
 						"header": [
@@ -408,45 +816,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl_order}}/api/orders",
+							"raw": "{{baseUrl_order}}/api/v1/orders",
 							"host": [
 								"{{baseUrl_order}}"
 							],
 							"path": [
 								"api",
-								"orders"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Checkout (Simulated Decline)",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{jwt_token}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"paymentMethod\": \"credit_card\",\n  \"cardNumber\": \"1111-2222-3333-9999\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl_order}}/api/orders",
-							"host": [
-								"{{baseUrl_order}}"
-							],
-							"path": [
-								"api",
+								"v1",
 								"orders"
 							]
 						}
@@ -465,13 +841,388 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl_order}}/api/orders",
+							"raw": "{{baseUrl_order}}/api/v1/orders?page=1&limit=10",
 							"host": [
 								"{{baseUrl_order}}"
 							],
 							"path": [
 								"api",
+								"v1",
 								"orders"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "PENDING",
+									"disabled": true
+								},
+								{
+									"key": "userId",
+									"value": "{{userId}}",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Order Details by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_order}}/api/v1/orders/{{orderId}}",
+							"host": [
+								"{{baseUrl_order}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status (Admin Only)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"PAID\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_order}}/api/v1/orders/{{orderId}}/status",
+							"host": [
+								"{{baseUrl_order}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders",
+								"{{orderId}}",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_order}}/health",
+							"host": [
+								"{{baseUrl_order}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Readiness Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_order}}/ready",
+							"host": [
+								"{{baseUrl_order}}"
+							],
+							"path": [
+								"ready"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Version Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_order}}/version",
+							"host": [
+								"{{baseUrl_order}}"
+							],
+							"path": [
+								"version"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payment Service",
+			"item": [
+				{
+					"name": "Process Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.id) {",
+									"        pm.collectionVariables.set(\"paymentId\", jsonData.data.id);",
+									"        console.log(\"Saved paymentId: \" + jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"amount\": 25.0,\n  \"paymentMethod\": \"credit_card\",\n  \"cardNumber\": \"1111-2222-3333-4444\",\n  \"currency\": \"USD\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_payment}}/api/v1/payments",
+							"host": [
+								"{{baseUrl_payment}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment History",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_payment}}/api/v1/payments?page=1&limit=10",
+							"host": [
+								"{{baseUrl_payment}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "SUCCESS",
+									"disabled": true
+								},
+								{
+									"key": "userId",
+									"value": "{{userId}}",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment Details by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_payment}}/api/v1/payments/{{paymentId}}",
+							"host": [
+								"{{baseUrl_payment}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"{{paymentId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment History for Order",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl_payment}}/api/v1/payments/order/{{orderId}}",
+							"host": [
+								"{{baseUrl_payment}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"order",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refund Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"amount\": 25.0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl_payment}}/api/v1/payments/{{paymentId}}/refund",
+							"host": [
+								"{{baseUrl_payment}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"payments",
+								"{{paymentId}}",
+								"refund"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_payment}}/health",
+							"host": [
+								"{{baseUrl_payment}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Readiness Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_payment}}/ready",
+							"host": [
+								"{{baseUrl_payment}}"
+							],
+							"path": [
+								"ready"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Version Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl_payment}}/version",
+							"host": [
+								"{{baseUrl_payment}}"
+							],
+							"path": [
+								"version"
 							]
 						}
 					},
@@ -522,7 +1273,42 @@
 			"type": "string"
 		},
 		{
+			"key": "baseUrl_payment",
+			"value": "http://localhost:3005",
+			"type": "string"
+		},
+		{
 			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "admin_jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "cartItemId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "orderId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "paymentId",
 			"value": "",
 			"type": "string"
 		}
