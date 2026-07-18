@@ -85,6 +85,7 @@ The services will be active on the following ports:
 ## 📚 5. Deep-Dive Documentation
 
 For more in-depth architectural and operational guides, please refer to the following:
+- **[Running the Services Guide](file:///t:/Projects/CMart/docs/run-services.md):** Step-by-step instructions for running services concurrently or individually, configuring environment variables, database migrations, and verification.
 - **[Architecture Specification Guide](file:///t:/Projects/CMart/docs/architecture.md):** Deep-dive on database isolation, inter-service maps, and data ownership.
 - **[API Contract Overview](file:///t:/Projects/CMart/docs/api-overview.md):** Detail request-response JSON shapes, authentication, and E2E checkout sequences.
 - **[Integration & Platform Roadmap](file:///t:/Projects/CMart/docs/backend-integration.md):** Information on testing suites, shared module details, and the Kubernetes/AWS cloud roadmaps.
