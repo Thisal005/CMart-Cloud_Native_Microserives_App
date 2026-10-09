@@ -32,13 +32,17 @@ export function mapProductDetails(product: RawProduct): Product {
 
   const nameLower = product.name.toLowerCase();
   if (nameLower.includes("laptop")) {
-    imageUrl = "https://images.unsplash.com/photo-1496181130204-7552cc14ac1a?q=80&w=800";
+    imageUrl = "/space/product-laptop.webp";
     category = "Computers";
     sku = "CO-LAPT-" + id.slice(0, 6).toUpperCase();
   } else if (nameLower.includes("headphone")) {
-    imageUrl = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=800";
+    imageUrl = "/space/product-headphones.webp";
     category = "Audio";
     sku = "AU-HEAD-" + id.slice(0, 6).toUpperCase();
+  } else if (nameLower.includes("camera")) {
+    imageUrl = "/space/product-camera.webp";
+    category = "Accessories";
+    sku = "AC-CAM-" + id.slice(0, 6).toUpperCase();
   } else if (nameLower.includes("keyboard")) {
     imageUrl = "https://images.unsplash.com/photo-1587829741301-dc798b83add3?q=80&w=800";
     category = "Accessories";

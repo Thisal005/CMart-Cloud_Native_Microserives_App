@@ -44,9 +44,11 @@ export interface RawCart {
 export function mapCartItemImage(name: string): string {
   const nameLower = name.toLowerCase();
   if (nameLower.includes("laptop")) {
-    return "https://images.unsplash.com/photo-1496181130204-7552cc14ac1a?q=80&w=200";
+    return "/space/product-laptop.webp";
   } else if (nameLower.includes("headphone")) {
-    return "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=200";
+    return "/space/product-headphones.webp";
+  } else if (nameLower.includes("camera")) {
+    return "/space/product-camera.webp";
   } else if (nameLower.includes("keyboard")) {
     return "https://images.unsplash.com/photo-1587829741301-dc798b83add3?q=80&w=200";
   }

@@ -23,8 +23,8 @@ export class ProductRepository {
         stock: 100,
       },
       {
-        name: 'Mechanical Gaming Keyboard',
-        description: 'RGB backlit mechanical keyboard with tactile blue switches.',
+        name: 'Pocket Gimbal Camera',
+        description: 'Compact handheld camera for capturing everyday moments on the move.',
         price: 89.99,
         stock: 150,
       }
