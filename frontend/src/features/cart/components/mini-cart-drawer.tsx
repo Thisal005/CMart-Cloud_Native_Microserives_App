@@ -3,6 +3,8 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import homeStyles from "@/app/home.module.css";
 import { X, ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
 import { useCartStore } from "@/store/use-cart-store";
 import {
@@ -15,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function MiniCartDrawer() {
+  const pathname = usePathname();
   const { isOpen, setCartOpen } = useCartStore();
   const { data: response, isLoading } = useCartQuery();
   const updateQuantityMutation = useUpdateQuantityMutation();
@@ -68,7 +71,12 @@ export function MiniCartDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true">
+    <div
+      className={`fixed inset-0 z-50 flex justify-end ${pathname === "/" ? homeStyles.cartTheme : ""}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Shopping cart"
+    >
       {/* Backdrop Backdrop Overlay */}
       <div
         className="animate-in fade-in fixed inset-0 bg-black/60 transition-opacity duration-200"
