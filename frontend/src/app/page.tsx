@@ -16,6 +16,10 @@ import {
 } from "lucide-react";
 import { SpaceHeader } from "@/components/home/space-header";
 import { HomeProductImage } from "@/components/home/product-image";
+import { CosmicParticles } from "@/components/home/cosmic-particles";
+import { AudioVisualizer } from "@/components/home/audio-visualizer";
+import { useInView } from "@/hooks/use-in-view";
+import { useMouseParallax } from "@/hooks/use-mouse-parallax";
 import { useProductsQuery } from "@/features/products/hooks/use-products";
 import { ProductGridSkeleton } from "@/features/products/components/product-skeleton";
 import { formatUSD } from "@/utils/currency";
@@ -45,6 +49,34 @@ const categories = [
 export default function Home() {
   const { data: response, isLoading, isError, refetch } = useProductsQuery();
   const products = response?.data?.slice(0, 3) || [];
+
+  const { containerRef: heroArtRef, offset: heroOffset } =
+    useMouseParallax<HTMLDivElement>(0.07);
+
+  const { ref: categoriesRef, inView: categoriesInView } = useInView<HTMLElement>({
+    threshold: 0.12,
+  });
+  const { ref: featuredRef, inView: featuredInView } = useInView<HTMLElement>({
+    threshold: 0.1,
+  });
+  const { ref: audioRef, inView: audioInView } = useInView<HTMLElement>({
+    threshold: 0.15,
+  });
+  const { ref: deliveryRef, inView: deliveryInView } = useInView<HTMLElement>({
+    threshold: 0.15,
+  });
+  const { ref: footerRef, inView: footerInView } = useInView<HTMLDivElement>({
+    threshold: 0.12,
+  });
+
+  const handleCardMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+    event.currentTarget.style.setProperty("--mouse-x", `${x}px`);
+    event.currentTarget.style.setProperty("--mouse-y", `${y}px`);
+  };
+
   return (
     <div className={styles.home}>
       <a className={styles.skipLink} href="#main-content">
@@ -53,6 +85,7 @@ export default function Home() {
       <SpaceHeader />
       <main id="main-content">
         <section className={styles.hero} aria-labelledby="hero-heading">
+          <CosmicParticles count={50} />
           <Image
             src="/space/nebula.webp"
             alt=""
@@ -63,19 +96,19 @@ export default function Home() {
           />
           <div className={`${styles.container} ${styles.heroInner}`}>
             <div className={styles.heroCopy}>
-              <span className={styles.eyebrow}>
+              <span className={`${styles.eyebrow} ${styles.heroEntranceEyebrow}`}>
                 <span className={styles.liveDot} /> A NEW WORLD OF TECH
               </span>
-              <h1 id="hero-heading">
+              <h1 id="hero-heading" className={styles.heroEntranceH1}>
                 Your next upgrade.
                 <br />
                 <span>Beyond ordinary.</span>
               </h1>
-              <p>
+              <p className={styles.heroEntranceP}>
                 Discover standout tech for the way you work, play, and create. Your next great setup
                 starts here.
               </p>
-              <div className={styles.actions}>
+              <div className={`${styles.actions} ${styles.heroEntranceActions}`}>
                 <Link href="/products" className={styles.primaryButton}>
                   Explore Products <ArrowUpRight size={18} />
                 </Link>
@@ -83,12 +116,20 @@ export default function Home() {
                   Browse Categories <ArrowDown size={16} />
                 </a>
               </div>
-              <div className={styles.heroNote}>
+              <div className={`${styles.heroNote} ${styles.heroEntranceNote}`}>
                 <span /> DOWN TO EARTH PRICES. OUT OF THIS WORLD GEAR.
               </div>
             </div>
-            <div className={styles.heroArt}>
-              <div className={styles.orbit} aria-hidden="true" />
+            <div ref={heroArtRef} className={styles.heroArt}>
+              <div
+                className={styles.orbit}
+                aria-hidden="true"
+                style={{
+                  transform: `translate3d(${-heroOffset.x * 12}px, ${-heroOffset.y * 12}px, 0) rotate(-28deg) rotateY(${heroOffset.x * 6}deg)`,
+                }}
+              >
+                <span className={styles.orbitSatellite} aria-hidden="true" />
+              </div>
               <Image
                 src="/space/astronaut.webp"
                 alt="Astronaut floating through space with a glowing cyan and violet visor"
@@ -96,21 +137,43 @@ export default function Home() {
                 priority
                 sizes="(max-width: 700px) 100vw, 58vw"
                 className={styles.astronaut}
+                style={{
+                  transform: `translate3d(${heroOffset.x * 18}px, ${heroOffset.y * 18}px, 0) rotateY(${heroOffset.x * 8}deg) rotateX(${-heroOffset.y * 8}deg)`,
+                }}
               />
-              <div className={styles.artLabel} aria-hidden="true">
+              <div
+                className={styles.artLabel}
+                aria-hidden="true"
+                style={{
+                  transform: `translate3d(${heroOffset.x * 24}px, ${heroOffset.y * 24}px, 0)`,
+                }}
+              >
                 <Sparkles size={16} />
                 <div>
                   Made for explorers<span>THE NEXT FRONTIER IS YOURS</span>
                 </div>
               </div>
-              <span className={styles.coordinates} aria-hidden="true">
+              <span
+                className={styles.coordinates}
+                aria-hidden="true"
+                style={{
+                  transform: `translate3d(${heroOffset.x * 10}px, ${heroOffset.y * 10}px, 0)`,
+                }}
+              >
                 CM / 001 — EXPLORE WITHOUT LIMITS
               </span>
             </div>
           </div>
         </section>
         <div className={styles.container}>
-          <section id="categories" className={styles.section} aria-labelledby="categories-heading">
+          <section
+            id="categories"
+            ref={categoriesRef}
+            className={`${styles.section} ${styles.revealSection} ${
+              categoriesInView ? styles.isRevealed : ""
+            }`}
+            aria-labelledby="categories-heading"
+          >
             <div className={styles.sectionHeading}>
               <div>
                 <span className={styles.eyebrow}>FIND YOUR ORBIT</span>
@@ -120,7 +183,12 @@ export default function Home() {
             </div>
             <div className={styles.categories}>
               {categories.map(({ name, description, detail, icon: Icon }, index) => (
-                <Link href={`/products?category=${name}`} key={name} className={styles.category}>
+                <Link
+                  href={`/products?category=${name}`}
+                  key={name}
+                  className={`${styles.category} ${styles.staggerItem}`}
+                  onMouseMove={handleCardMouseMove}
+                >
                   <div className={styles.categoryTop}>
                     <Icon size={30} strokeWidth={1.4} />
                     <span>0{index + 1}</span>
@@ -135,7 +203,14 @@ export default function Home() {
               ))}
             </div>
           </section>
-          <section id="featured" className={styles.section} aria-labelledby="featured-heading">
+          <section
+            id="featured"
+            ref={featuredRef}
+            className={`${styles.section} ${styles.revealSection} ${
+              featuredInView ? styles.isRevealed : ""
+            }`}
+            aria-labelledby="featured-heading"
+          >
             <div className={styles.sectionHeading}>
               <div>
                 <span className={styles.eyebrow}>WORTH EXPLORING</span>
@@ -170,7 +245,11 @@ export default function Home() {
             ) : (
               <div className={styles.products}>
                 {products.map((product) => (
-                  <article key={product.id} className={styles.product}>
+                  <article
+                    key={product.id}
+                    className={`${styles.product} ${styles.staggerItem}`}
+                    onMouseMove={handleCardMouseMove}
+                  >
                     <Link
                       href={`/products/${product.id}`}
                       className={styles.productImage}
@@ -178,6 +257,12 @@ export default function Home() {
                     >
                       <HomeProductImage src={product.imageUrl} name={product.name} />
                       <span className={styles.stock}>
+                        <span
+                          className={`${styles.stockDot} ${
+                            product.stock > 0 ? "" : styles.stockDotOut
+                          }`}
+                          aria-hidden="true"
+                        />
                         {product.stock > 0 ? "In stock" : "Out of stock"}
                       </span>
                     </Link>
@@ -201,10 +286,17 @@ export default function Home() {
               </div>
             )}
           </section>
-          <section className={styles.audio} aria-labelledby="audio-heading">
+          <section
+            ref={audioRef}
+            className={`${styles.audio} ${styles.revealSection} ${
+              audioInView ? styles.isRevealed : ""
+            }`}
+            aria-labelledby="audio-heading"
+          >
             <div className={styles.audioCopy}>
               <span className={styles.eyebrow}>
                 <Headphones size={15} /> TUNE INTO SOMETHING EXTRAORDINARY
+                <AudioVisualizer />
               </span>
               <h2 id="audio-heading">
                 Sound from
@@ -232,7 +324,13 @@ export default function Home() {
               LESS NOISE. MORE UNIVERSE.
             </span>
           </section>
-          <section className={styles.delivery} aria-labelledby="delivery-heading">
+          <section
+            ref={deliveryRef}
+            className={`${styles.delivery} ${styles.revealSection} ${
+              deliveryInView ? styles.isRevealed : ""
+            }`}
+            aria-labelledby="delivery-heading"
+          >
             <div className={styles.deliveryArt}>
               <Image
                 src="/space/delivery.webp"
@@ -273,7 +371,12 @@ export default function Home() {
       </main>
       <footer className={styles.footer}>
         <div className={styles.container}>
-          <div className={styles.footerShowcase}>
+          <div
+            ref={footerRef}
+            className={`${styles.footerShowcase} ${styles.revealSection} ${
+              footerInView ? styles.isRevealed : ""
+            }`}
+          >
             <div className={styles.footerCopy}>
               <span className={styles.eyebrow}>STAY CURIOUS. GO FURTHER.</span>
               <h2>
