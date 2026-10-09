@@ -1,178 +1,335 @@
 "use client";
 
-import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowDown,
   ArrowRight,
-  Laptop,
+  ArrowUpRight,
   Headphones,
   Keyboard,
+  Laptop,
+  PackageCheck,
   ShieldCheck,
+  Sparkles,
   Truck,
-  RotateCcw,
 } from "lucide-react";
-import { PublicLayout } from "@/components/layout/public-layout";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { SpaceHeader } from "@/components/home/space-header";
+import { HomeProductImage } from "@/components/home/product-image";
 import { useProductsQuery } from "@/features/products/hooks/use-products";
-import { ProductCard } from "@/features/products/components/product-card";
 import { ProductGridSkeleton } from "@/features/products/components/product-skeleton";
-import { ErrorState } from "@/components/ui/error-state";
+import { formatUSD } from "@/utils/currency";
+import styles from "./home.module.css";
+
+const categories = [
+  {
+    name: "Computers",
+    description: "More power. More possibilities.",
+    detail: "Laptops & desktops",
+    icon: Laptop,
+  },
+  {
+    name: "Audio",
+    description: "Find your own frequency.",
+    detail: "Headphones & speakers",
+    icon: Headphones,
+  },
+  {
+    name: "Accessories",
+    description: "Small details. Big difference.",
+    detail: "Cameras & essentials",
+    icon: Keyboard,
+  },
+];
 
 export default function Home() {
-  const { data: response, isLoading, isError, error, refetch } = useProductsQuery();
-
-  const featuredProducts = response?.data?.slice(0, 3) || [];
-
+  const { data: response, isLoading, isError, refetch } = useProductsQuery();
+  const products = response?.data?.slice(0, 3) || [];
   return (
-    <PublicLayout>
-      {/* Hero Header */}
-      <section className="from-primary to-primary/80 text-primary-foreground relative mb-12 overflow-hidden rounded-3xl border bg-linear-to-r px-8 py-16 shadow-xl md:px-16 md:py-24">
-        <div className="relative z-10 max-w-2xl space-y-6">
-          <Badge className="bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/20 border-none px-3 py-1 text-xs font-semibold">
-            Introducing CMart v2
-          </Badge>
-          <h1 className="text-4xl leading-tight font-extrabold tracking-tight md:text-6xl">
-            Premium Tech Gear, Simplified.
-          </h1>
-          <p className="text-primary-foreground/90 text-lg font-medium">
-            Explore our curated catalog of high-performance laptops, professional noise-cancelling
-            headphones, and mechanical keyboards.
-          </p>
-          <div className="flex gap-4 pt-2">
-            <Button size="lg" variant="secondary" asChild className="gap-2 font-semibold shadow-sm">
-              <Link href="/products">
-                Shop Catalog <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-        <div className="from-primary-foreground/10 pointer-events-none absolute top-0 right-0 bottom-0 hidden w-1/3 bg-radial to-transparent md:block" />
-      </section>
-
-      {/* Category Shortcut Sections */}
-      <section className="mb-16 space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-foreground text-2xl font-bold tracking-tight">Browse Categories</h2>
-        </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {[
-            {
-              name: "Computers",
-              icon: Laptop,
-              count: "Laptops & Desktops",
-              color: "text-blue-500 bg-blue-500/10",
-            },
-            {
-              name: "Audio",
-              icon: Headphones,
-              count: "Headphones & Speakers",
-              color: "text-purple-500 bg-purple-500/10",
-            },
-            {
-              name: "Accessories",
-              icon: Keyboard,
-              count: "Keyboards & Inputs",
-              color: "text-amber-500 bg-amber-500/10",
-            },
-          ].map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <Link
-                key={cat.name}
-                href={`/products?category=${cat.name}`}
-                className="group bg-card flex items-center gap-4 rounded-xl border p-6 shadow-sm transition-all hover:shadow-md"
-              >
-                <div
-                  className={`rounded-lg p-3 ${cat.color} transition-transform group-hover:scale-105`}
-                >
-                  <Icon className="h-6 w-6" aria-hidden="true" />
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold tracking-tight">{cat.name}</h3>
-                  <p className="text-muted-foreground text-xs">{cat.count}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Featured Products Lists */}
-      <section className="mb-16 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-foreground text-2xl font-bold tracking-tight">Featured Products</h2>
-            <p className="text-muted-foreground text-sm">
-              Handpicked selections for developers and tech enthusiast builders
-            </p>
-          </div>
-          <Button variant="ghost" asChild className="gap-1 text-sm font-semibold">
-            <Link href="/products">
-              View All <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
-
-        {isLoading ? (
-          <ProductGridSkeleton count={3} />
-        ) : isError ? (
-          <ErrorState
-            title="Failed to Load Products"
-            message={
-              error instanceof Error
-                ? error.message
-                : "Please ensure that the Product Service backend is running."
-            }
-            onRetry={refetch}
+    <div className={styles.home}>
+      <a className={styles.skipLink} href="#main-content">
+        Skip to content
+      </a>
+      <SpaceHeader />
+      <main id="main-content">
+        <section className={styles.hero} aria-labelledby="hero-heading">
+          <Image
+            src="/space/nebula.webp"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className={styles.nebula}
           />
-        ) : featuredProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
-            <p className="text-muted-foreground mb-4 text-sm">No products found in the catalog</p>
-            <Button size="sm" onClick={() => refetch()}>
-              Reload
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Customer Trust Blocks */}
-      <section className="bg-muted/10 mb-8 grid grid-cols-1 gap-8 rounded-2xl border py-8 md:grid-cols-3">
-        {[
-          {
-            icon: Truck,
-            title: "Free Shipping",
-            description: "On all catalog purchases above $100",
-          },
-          {
-            icon: RotateCcw,
-            title: "14-Day Returns",
-            description: "Hassle-free money back guarantee policy",
-          },
-          {
-            icon: ShieldCheck,
-            title: "Secure Checkout",
-            description: "Encrypted payments processed instantly",
-          },
-        ].map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <div key={index} className="flex items-start gap-4 px-6">
-              <Icon className="text-primary/80 h-10 w-10 shrink-0" aria-hidden="true" />
-              <div>
-                <h3 className="text-sm font-semibold">{item.title}</h3>
-                <p className="text-muted-foreground text-xs">{item.description}</p>
+          <div className={`${styles.container} ${styles.heroInner}`}>
+            <div className={styles.heroCopy}>
+              <span className={styles.eyebrow}>
+                <span className={styles.liveDot} /> A NEW WORLD OF TECH
+              </span>
+              <h1 id="hero-heading">
+                Your next upgrade.
+                <br />
+                <span>Beyond ordinary.</span>
+              </h1>
+              <p>
+                Discover standout tech for the way you work, play, and create. Your next great setup
+                starts here.
+              </p>
+              <div className={styles.actions}>
+                <Link href="/products" className={styles.primaryButton}>
+                  Explore Products <ArrowUpRight size={18} />
+                </Link>
+                <a href="#categories" className={styles.secondaryButton}>
+                  Browse Categories <ArrowDown size={16} />
+                </a>
+              </div>
+              <div className={styles.heroNote}>
+                <span /> DOWN TO EARTH PRICES. OUT OF THIS WORLD GEAR.
               </div>
             </div>
-          );
-        })}
-      </section>
-    </PublicLayout>
+            <div className={styles.heroArt}>
+              <div className={styles.orbit} aria-hidden="true" />
+              <Image
+                src="/space/astronaut.webp"
+                alt="Astronaut floating through space with a glowing cyan and violet visor"
+                fill
+                priority
+                sizes="(max-width: 700px) 100vw, 58vw"
+                className={styles.astronaut}
+              />
+              <div className={styles.artLabel} aria-hidden="true">
+                <Sparkles size={16} />
+                <div>
+                  Made for explorers<span>THE NEXT FRONTIER IS YOURS</span>
+                </div>
+              </div>
+              <span className={styles.coordinates} aria-hidden="true">
+                CM / 001 — EXPLORE WITHOUT LIMITS
+              </span>
+            </div>
+          </div>
+        </section>
+        <div className={styles.container}>
+          <section id="categories" className={styles.section} aria-labelledby="categories-heading">
+            <div className={styles.sectionHeading}>
+              <div>
+                <span className={styles.eyebrow}>FIND YOUR ORBIT</span>
+                <h2 id="categories-heading">A universe of possibilities.</h2>
+              </div>
+              <span className={styles.sectionAside}>Your setup. Your world.</span>
+            </div>
+            <div className={styles.categories}>
+              {categories.map(({ name, description, detail, icon: Icon }, index) => (
+                <Link href={`/products?category=${name}`} key={name} className={styles.category}>
+                  <div className={styles.categoryTop}>
+                    <Icon size={30} strokeWidth={1.4} />
+                    <span>0{index + 1}</span>
+                  </div>
+                  <h3>{name}</h3>
+                  <p>{description}</p>
+                  <div className={styles.categoryBottom}>
+                    <span>{detail}</span>
+                    <ArrowUpRight size={19} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+          <section id="featured" className={styles.section} aria-labelledby="featured-heading">
+            <div className={styles.sectionHeading}>
+              <div>
+                <span className={styles.eyebrow}>WORTH EXPLORING</span>
+                <h2 id="featured-heading">Meet your next favorite.</h2>
+              </div>
+              <Link href="/products" className={styles.textLink}>
+                View all products <ArrowRight size={17} />
+              </Link>
+            </div>
+            {isLoading ? (
+              <div role="status" aria-label="Loading featured products">
+                <ProductGridSkeleton count={3} />
+              </div>
+            ) : isError ? (
+              <div className={styles.catalogState} role="status">
+                <PackageCheck size={30} />
+                <h3>Our catalog is taking a moment.</h3>
+                <p>We couldn’t load the products. Please try again.</p>
+                <button className={styles.secondaryButton} onClick={() => refetch()}>
+                  Try again <ArrowRight size={16} />
+                </button>
+              </div>
+            ) : products.length === 0 ? (
+              <div className={styles.catalogState}>
+                <Sparkles size={30} />
+                <h3>New discoveries are on the way.</h3>
+                <p>Check back soon for your next upgrade.</p>
+                <button className={styles.secondaryButton} onClick={() => refetch()}>
+                  Refresh catalog <ArrowRight size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className={styles.products}>
+                {products.map((product) => (
+                  <article key={product.id} className={styles.product}>
+                    <Link
+                      href={`/products/${product.id}`}
+                      className={styles.productImage}
+                      aria-label={`View ${product.name}`}
+                    >
+                      <HomeProductImage src={product.imageUrl} name={product.name} />
+                      <span className={styles.stock}>
+                        {product.stock > 0 ? "In stock" : "Out of stock"}
+                      </span>
+                    </Link>
+                    <div className={styles.productBody}>
+                      <span className={styles.eyebrow}>{product.category}</span>
+                      <h3>
+                        <Link href={`/products/${product.id}`}>{product.name}</Link>
+                      </h3>
+                      <p>
+                        {product.description || "Explore the details and find your next upgrade."}
+                      </p>
+                      <div className={styles.productBottom}>
+                        <strong>{formatUSD(product.price)}</strong>
+                        <Link href={`/products/${product.id}`} className={styles.textLink}>
+                          View details <ArrowUpRight size={17} />
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+          <section className={styles.audio} aria-labelledby="audio-heading">
+            <div className={styles.audioCopy}>
+              <span className={styles.eyebrow}>
+                <Headphones size={15} /> TUNE INTO SOMETHING EXTRAORDINARY
+              </span>
+              <h2 id="audio-heading">
+                Sound from
+                <br />
+                <span>another world.</span>
+              </h2>
+              <p>
+                Get lost in the music. Stay in the moment.
+                <br />
+                Discover audio that brings your world to life.
+              </p>
+              <Link href="/products?category=Audio" className={styles.primaryButton}>
+                Explore Audio <ArrowUpRight size={18} />
+              </Link>
+            </div>
+            <div className={styles.audioArt}>
+              <Image
+                src="/space/audio.webp"
+                alt="Astronaut wearing headphones with a glowing violet visor"
+                fill
+                sizes="(max-width: 700px) 90vw, 50vw"
+              />
+            </div>
+            <span className={styles.audioCaption} aria-hidden="true">
+              LESS NOISE. MORE UNIVERSE.
+            </span>
+          </section>
+          <section className={styles.delivery} aria-labelledby="delivery-heading">
+            <div className={styles.deliveryArt}>
+              <Image
+                src="/space/delivery.webp"
+                alt="Futuristic delivery rover carrying tech packages"
+                fill
+                sizes="(max-width: 700px) 90vw, 45vw"
+              />
+            </div>
+            <div className={styles.deliveryCopy}>
+              <span className={styles.eyebrow}>GREAT GEAR. A SIMPLE JOURNEY.</span>
+              <h2 id="delivery-heading">
+                From our universe
+                <br />
+                to your doorstep.
+              </h2>
+              <p>Find your favorites, make them yours, and keep everything in one place.</p>
+              <div className={styles.benefits}>
+                <div>
+                  <Truck size={21} />
+                  <span>
+                    <strong>Free shipping on orders $100+</strong>Your next upgrade, delivered for
+                    less.
+                  </span>
+                </div>
+                <div>
+                  <ShieldCheck size={21} />
+                  <span>
+                    <strong>A clear checkout</strong>Review your order before you pay.
+                  </span>
+                </div>
+              </div>
+              <Link href="/products" className={styles.textLink}>
+                Find your next upgrade <ArrowRight size={17} />
+              </Link>
+            </div>
+          </section>
+        </div>
+      </main>
+      <footer className={styles.footer}>
+        <div className={styles.container}>
+          <div className={styles.footerShowcase}>
+            <div className={styles.footerCopy}>
+              <span className={styles.eyebrow}>STAY CURIOUS. GO FURTHER.</span>
+              <h2>
+                There’s a whole
+                <br />
+                <span>world out there.</span>
+              </h2>
+              <p>Find the gear that takes you somewhere new.</p>
+              <Link href="/products" className={styles.primaryButton}>
+                Keep exploring <ArrowUpRight size={18} />
+              </Link>
+            </div>
+            <div className={styles.footerArt}>
+              <div className={styles.footerHalo} aria-hidden="true" />
+              <Image
+                src="/space/footer-astronaut.webp"
+                alt="Astronaut in a purple suit surrounded by violet butterflies"
+                fill
+                sizes="(max-width: 700px) 85vw, 35vw"
+              />
+            </div>
+            <nav className={styles.footerNavigation} aria-label="Footer">
+              <div>
+                <h3>Explore</h3>
+                <Link href="/products">All products</Link>
+                <a href="#categories">Categories</a>
+                <a href="#featured">Featured gear</a>
+              </div>
+              <div>
+                <h3>Your CMart</h3>
+                <Link href="/dashboard">My account</Link>
+                <Link href="/orders">My orders</Link>
+                <Link href="/cart">Shopping cart</Link>
+              </div>
+            </nav>
+          </div>
+          <div className={styles.footerSignature}>
+            <Link href="/" className={styles.brand}>
+              <span className={styles.brandMark}>
+                C<span />
+              </span>
+              CMart<span className={styles.brandDot}>.</span>
+            </Link>
+            <p>For a world beyond ordinary.</p>
+            <a href="#main-content" className={styles.textLink}>
+              Back to top <ArrowUpRight size={16} />
+            </a>
+          </div>
+          <div className={styles.footerBottom}>
+            <span>© {new Date().getFullYear()} CMart. All rights reserved.</span>
+            <span>
+              YOUR NEXT DISCOVERY STARTS HERE <ArrowUpRight size={13} />
+            </span>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
