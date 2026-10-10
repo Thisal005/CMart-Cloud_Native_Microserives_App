@@ -72,7 +72,7 @@ export function MiniCartDrawer() {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex justify-end ${pathname === "/" ? homeStyles.cartTheme : ""}`}
+      className={`fixed inset-0 z-50 flex justify-end ${pathname === "/" || pathname === "/products" ? homeStyles.cartTheme : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label="Shopping cart"

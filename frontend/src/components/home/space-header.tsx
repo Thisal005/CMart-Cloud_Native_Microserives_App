@@ -2,13 +2,16 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import { useAuthStore } from "@/store/use-auth-store";
 import { useCartStore } from "@/store/use-cart-store";
 import { useCartQuery } from "@/features/cart/hooks/use-cart-queries";
 import styles from "@/app/home.module.css";
 
-export function SpaceHeader() {
+export function SpaceHeader({ onBrowseCategories }: { onBrowseCategories?: () => void } = {}) {
+  const pathname = usePathname();
+  const isShop = pathname === "/products";
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const { isAuthenticated, clearSession } = useAuthStore();
@@ -32,12 +35,16 @@ export function SpaceHeader() {
           CMart<span className={styles.brandDot}>.</span>
         </Link>
         <nav className={styles.desktopNav} aria-label="Main navigation">
-          <Link href="/" aria-current="page">
+          <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>
             Home
           </Link>
-          <Link href="/products">Shop</Link>
-          <a href="#categories">Categories</a>
-          <a href="#featured">Featured</a>
+          <Link href="/products" aria-current={isShop ? "page" : undefined}>
+            Shop
+          </Link>
+          <Link href={isShop ? "#categories" : "/#categories"} onClick={onBrowseCategories}>
+            Categories
+          </Link>
+          <Link href={isShop ? "#collections" : "/#featured"}>Featured</Link>
         </nav>
         <div className={styles.headerActions}>
           <form action="/products" role="search" className={styles.search}>
@@ -97,8 +104,10 @@ export function SpaceHeader() {
           }}
         >
           <Link href="/products">Shop all products</Link>
-          <a href="#categories">Categories</a>
-          <a href="#featured">Featured products</a>
+          <Link href={isShop ? "#categories" : "/#categories"} onClick={onBrowseCategories}>
+            Categories
+          </Link>
+          <Link href={isShop ? "#collections" : "/#featured"}>Featured products</Link>
           <form action="/products" role="search" className={styles.search}>
             <input
               type="search"
