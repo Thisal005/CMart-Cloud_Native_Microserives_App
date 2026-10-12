@@ -97,7 +97,7 @@ export default function ProductDetailsPage({ params }: ProductDetailsPageProps) 
             {/* Primary Detail Section */}
             <div className="grid grid-cols-1 items-start gap-12 md:grid-cols-2">
               {/* Product Photo Grid Frame */}
-              <div className="bg-card relative aspect-square overflow-hidden rounded-2xl border shadow-xs">
+              <div className="product-detail-image bg-card relative aspect-square overflow-hidden rounded-2xl border shadow-xs">
                 <Image
                   src={product.imageUrl}
                   alt={product.name}
@@ -109,7 +109,8 @@ export default function ProductDetailsPage({ params }: ProductDetailsPageProps) 
               </div>
 
               {/* Product Info Block */}
-              <div className="space-y-6">
+              <div className="product-detail-info space-y-6">
+                <p className="cosmic-eyebrow">A new discovery for your everyday</p>
                 <div className="space-y-2">
                   <Badge variant="outline" className="text-primary text-xs font-semibold uppercase">
                     {product.category}
