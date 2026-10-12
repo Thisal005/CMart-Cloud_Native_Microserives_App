@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { SpaceArt } from "@/components/ui/space-art";
 import { CheckCircle, ShoppingBag, Receipt, Calendar } from "lucide-react";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { AuthenticatedLayout } from "@/components/layout/authenticated-layout";
@@ -56,9 +57,10 @@ export default function ConfirmationContent() {
     <AuthenticatedLayout>
       <PublicLayout>
         <div className="mx-auto max-w-2xl space-y-8 py-4">
-          {/* Success Checkmark */}
+          {/* Order arrival illustration */}
           <div className="flex flex-col items-center space-y-4 text-center">
-            <div className="animate-pulse rounded-full bg-emerald-500/10 p-4 text-emerald-600">
+            <SpaceArt asset="moon.png" />
+            <div className="rounded-full bg-emerald-500/10 p-3 text-emerald-400">
               <CheckCircle className="h-12 w-12" aria-hidden="true" />
             </div>
             <h1 className="text-foreground text-3xl font-extrabold tracking-tight">
