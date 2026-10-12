@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { SpaceArt } from "@/components/ui/space-art";
 import homeStyles from "@/app/home.module.css";
 import { X, ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
 import { useCartStore } from "@/store/use-cart-store";
@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function MiniCartDrawer() {
-  const pathname = usePathname();
   const { isOpen, setCartOpen } = useCartStore();
   const { data: response, isLoading } = useCartQuery();
   const updateQuantityMutation = useUpdateQuantityMutation();
@@ -72,7 +71,7 @@ export function MiniCartDrawer() {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex justify-end ${pathname === "/" || pathname === "/products" ? homeStyles.cartTheme : ""}`}
+      className={`fixed inset-0 z-50 flex justify-end ${homeStyles.cartTheme}`}
       role="dialog"
       aria-modal="true"
       aria-label="Shopping cart"
@@ -110,9 +109,7 @@ export function MiniCartDrawer() {
             </div>
           ) : items.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center space-y-4 text-center">
-              <div className="bg-muted rounded-full p-4">
-                <ShoppingBag className="text-muted-foreground h-10 w-10" aria-hidden="true" />
-              </div>
+              <SpaceArt asset="moon.png" />
               <h3 className="text-base font-semibold">Your Cart is Empty</h3>
               <p className="text-muted-foreground max-w-[220px] text-xs">
                 Add some high-performance items from our catalog to get started!
