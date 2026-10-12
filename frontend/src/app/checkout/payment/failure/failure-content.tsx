@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { SpaceArt } from "@/components/ui/space-art";
 import { AlertTriangle, RefreshCw, ArrowLeft } from "lucide-react";
 import { PublicLayout } from "@/components/layout/public-layout";
 import { AuthenticatedLayout } from "@/components/layout/authenticated-layout";
@@ -40,9 +41,10 @@ export default function FailureContent() {
   return (
     <AuthenticatedLayout>
       <PublicLayout>
-        <div className="bg-muted/20 flex min-h-screen items-center justify-center px-4 py-8">
+        <div className="flex min-h-[65vh] items-center justify-center py-8">
           <Card className="w-full max-w-md border shadow-lg">
-            <CardHeader className="space-y-1 text-center">
+            <CardHeader className="space-y-3 text-center">
+              <SpaceArt />
               <div className="bg-destructive/10 text-destructive mx-auto flex h-12 w-12 animate-pulse items-center justify-center rounded-full">
                 <AlertTriangle className="h-6 w-6" aria-hidden="true" />
               </div>
