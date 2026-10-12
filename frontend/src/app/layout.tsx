@@ -33,15 +33,16 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
           <QueryProvider>
             <AuthProvider>
               {children}
               <MiniCartDrawer />
-              <Toaster richColors closeButton position="top-right" />
+              <Toaster theme="dark" richColors closeButton position="top-right" />
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>
