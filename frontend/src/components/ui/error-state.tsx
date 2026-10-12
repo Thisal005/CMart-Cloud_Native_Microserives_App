@@ -1,4 +1,5 @@
 import * as React from "react";
+import { SpaceArt } from "@/components/ui/space-art";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,8 +20,9 @@ export function ErrorState({
 }: ErrorStateProps) {
   return (
     <div className={`flex flex-col items-center justify-center p-8 text-center ${className}`}>
+      <SpaceArt />
       <div className="bg-destructive/10 text-destructive mb-4 flex items-center justify-center rounded-full p-4">
-        <AlertCircle className="h-12 w-12" />
+        <AlertCircle className="h-6 w-6" />
       </div>
       <h3 className="text-destructive mb-2 text-lg font-semibold tracking-tight">{title}</h3>
       <p className="text-muted-foreground mb-6 max-w-sm text-sm">{message}</p>
