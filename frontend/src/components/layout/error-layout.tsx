@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { SpaceArt } from "@/components/ui/space-art";
 import { Button } from "@/components/ui/button";
 
 interface ErrorLayoutProps {
@@ -12,10 +12,8 @@ interface ErrorLayoutProps {
 
 export function ErrorLayout({ error, reset }: ErrorLayoutProps) {
   return (
-    <div className="bg-background flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <div className="bg-destructive/10 text-destructive mb-4 flex items-center justify-center rounded-full p-4">
-        <AlertTriangle className="h-12 w-12" />
-      </div>
+    <div className="cosmic-shell flex min-h-screen flex-col items-center justify-center px-4 text-center">
+      <SpaceArt />
       <h2 className="mb-2 text-2xl font-bold tracking-tight">Something went wrong</h2>
       <p className="text-muted-foreground mb-6 max-w-md text-sm">
         {error.message || "An unexpected rendering error occurred."}
