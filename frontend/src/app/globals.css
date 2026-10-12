@@ -114,3 +114,350 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
 }
+
+/* Shared storefront palette, including portalled dialogs and notifications. */
+:root,
+.dark {
+  color-scheme: dark;
+  --background: 225 55% 6%;
+  --foreground: 220 40% 96%;
+  --card: 223 38% 10%;
+  --card-foreground: 220 40% 96%;
+  --popover: 223 38% 10%;
+  --popover-foreground: 220 40% 96%;
+  --primary: 263 90% 76%;
+  --primary-foreground: 250 50% 10%;
+  --secondary: 245 27% 19%;
+  --secondary-foreground: 240 30% 94%;
+  --muted: 223 28% 17%;
+  --muted-foreground: 225 18% 69%;
+  --accent: 250 32% 22%;
+  --accent-foreground: 240 30% 96%;
+  --destructive: 0 85% 70%;
+  --destructive-foreground: 0 0% 8%;
+  --border: 228 24% 22%;
+  --input: 228 24% 26%;
+  --ring: 263 90% 76%;
+  --radius: 0.85rem;
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    font-family: var(--font-geist-sans), sans-serif;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  a:focus-visible {
+    outline: 2px solid #a78bfa;
+    outline-offset: 4px;
+  }
+  input,
+  select,
+  textarea {
+    accent-color: #a78bfa;
+  }
+  ::selection {
+    background: #7954c8;
+    color: white;
+  }
+}
+
+.cosmic-shell {
+  background: radial-gradient(ellipse at 90% 0%, #43235b25, transparent 50%), #070b18;
+  color: #f3f5fc;
+}
+.cosmic-container {
+  width: min(1280px, calc(100% - 96px));
+  margin-inline: auto;
+}
+.cosmic-footer {
+  border-top: 1px solid #ffffff10;
+  padding: 32px 0;
+}
+.cosmic-card {
+  background-image: linear-gradient(140deg, #ffffff03, transparent 60%);
+}
+.cosmic-eyebrow {
+  color: #bca2f5;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 2.4px;
+  text-transform: uppercase;
+}
+.journey-banner {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 230px;
+  display: flex;
+  align-items: center;
+  padding: 36px 40px;
+  margin-bottom: 32px;
+  border: 1px solid #a78bfa25;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 85% 90%, #7237a538, transparent 55%),
+    linear-gradient(110deg, #12182c, #111023);
+}
+.journey-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.3;
+  background-image:
+    radial-gradient(1px 1px at 12% 28%, #fff 90%, transparent),
+    radial-gradient(1px 1px at 76% 64%, #d5c8ff 90%, transparent);
+  background-size:
+    127px 113px,
+    193px 173px;
+}
+.journey-copy {
+  max-width: 65%;
+  position: relative;
+  z-index: 1;
+}
+.journey-copy h1 {
+  margin: 14px 0 12px;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+  font-weight: 650;
+  max-width: 620px;
+}
+.journey-copy > p:last-child {
+  max-width: 440px;
+  color: #a8adc3;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.journey-art {
+  position: absolute;
+  right: -25px;
+  bottom: -25px;
+  width: 390px;
+  height: 305px;
+  pointer-events: none;
+}
+.journey-art img {
+  filter: drop-shadow(0 0 28px #a855f720);
+}
+.auth-scene {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 100vh;
+}
+.auth-art {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 620px;
+  overflow: hidden;
+}
+.auth-art > img {
+  object-position: 50% 40%;
+}
+.auth-art-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #070b1840, transparent 35%, #070b18ec);
+}
+.auth-brand {
+  position: absolute;
+  top: 40px;
+  left: 48px;
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -1px;
+}
+.auth-brand span {
+  color: #c4a4ff;
+}
+.auth-art-copy {
+  position: absolute;
+  left: 48px;
+  right: 32px;
+  bottom: 60px;
+}
+.auth-art-copy h2 {
+  margin: 16px 0;
+  font-size: clamp(38px, 4vw, 64px);
+  line-height: 1.08;
+  font-weight: 650;
+  letter-spacing: -2px;
+}
+.auth-art-copy > p:last-child {
+  color: #ccc5df;
+  font-size: 14px;
+}
+.auth-form-area {
+  padding: 42px clamp(24px, 5vw, 90px);
+  display: flex;
+  flex-direction: column;
+}
+.auth-back {
+  color: #a8adc3;
+  font-size: 12px;
+  align-self: flex-start;
+}
+.auth-back:hover {
+  color: #c4a4ff;
+}
+.auth-form-wrap {
+  width: 100%;
+  max-width: 460px;
+  margin: auto;
+  padding-block: 48px;
+}
+.auth-form-wrap > .cosmic-eyebrow {
+  margin: 0 0 16px 24px;
+}
+.auth-form-wrap .cosmic-card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.auth-form-wrap form > div:last-child {
+  padding-top: 16px;
+}
+.auth-form-wrap input {
+  min-height: 46px;
+  background: #101628;
+  border-radius: 10px;
+}
+.auth-form-wrap button[type="submit"] {
+  min-height: 46px;
+}
+.auth-footnote {
+  text-align: center;
+  color: #727b98;
+  font-size: 11px;
+  margin-top: 24px;
+}
+.space-state-art {
+  position: relative;
+  width: 280px;
+  max-width: 100%;
+  height: 210px;
+  margin: -12px auto 8px;
+  background: radial-gradient(ellipse, #7848b522, transparent 65%);
+}
+.space-state-art img {
+  transform: scale(1.25);
+}
+.dashboard-sidebar {
+  background: #0c1120;
+}
+.dashboard-sidebar nav {
+  padding-top: 24px;
+}
+.dashboard-sidebar nav a {
+  margin-bottom: 7px;
+  min-height: 44px;
+  border-radius: 10px;
+}
+.account-content {
+  max-width: 1500px;
+  width: 100%;
+  margin-inline: auto;
+}
+.product-detail-image {
+  background: radial-gradient(ellipse at center, #30304a, #11182a 75%);
+}
+.product-detail-image img {
+  padding: 28px;
+}
+.product-detail-info {
+  padding-block: 20px;
+}
+
+@media (max-width: 1000px) {
+  .journey-art {
+    right: -70px;
+    width: 340px;
+  }
+  .journey-copy {
+    max-width: 70%;
+  }
+}
+@media (max-width: 800px) {
+  .auth-scene {
+    grid-template-columns: 1fr;
+  }
+  .auth-art {
+    position: relative;
+    height: 280px;
+    min-height: 0;
+  }
+  .auth-art > img {
+    object-position: center 38%;
+  }
+  .auth-brand {
+    top: 22px;
+    left: 24px;
+    font-size: 23px;
+  }
+  .auth-art-copy {
+    left: 24px;
+    bottom: 24px;
+  }
+  .auth-art-copy h2 {
+    font-size: 32px;
+    margin: 8px 0;
+  }
+  .auth-art-copy > p:last-child {
+    display: none;
+  }
+  .auth-form-area {
+    padding: 24px 16px;
+  }
+  .auth-form-wrap {
+    padding-block: 28px;
+  }
+}
+@media (max-width: 640px) {
+  .cosmic-container {
+    width: calc(100% - 32px);
+  }
+  .journey-banner {
+    min-height: 240px;
+    padding: 24px;
+    align-items: flex-start;
+  }
+  .journey-copy {
+    max-width: 100%;
+  }
+  .journey-copy h1 {
+    font-size: 28px;
+    max-width: 310px;
+  }
+  .journey-copy > p:last-child {
+    max-width: 72%;
+    font-size: 12px;
+  }
+  .journey-art {
+    width: 190px;
+    height: 155px;
+    bottom: -22px;
+    right: -48px;
+    opacity: 0.7;
+  }
+  .cosmic-eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
