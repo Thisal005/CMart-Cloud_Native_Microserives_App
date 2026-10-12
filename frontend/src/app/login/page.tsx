@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { LogIn, Loader2 } from "lucide-react";
 import { useLoginMutation } from "@/features/auth/hooks/use-auth-queries";
+import { AuthScene } from "@/components/layout/auth-scene";
 import { GuestLayout } from "@/components/layout/guest-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,10 +55,10 @@ export default function LoginPage() {
 
   return (
     <GuestLayout>
-      <div className="bg-muted/40 flex min-h-screen items-center justify-center px-4 py-12">
+      <AuthScene>
         <Card className="w-full max-w-md border shadow-lg">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold tracking-tight">Welcome to CMart</CardTitle>
+          <CardHeader className="space-y-2 text-left">
+            <CardTitle className="text-2xl font-bold tracking-tight">Welcome back.</CardTitle>
             <CardDescription>Enter your email and password to log in</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -132,7 +133,7 @@ export default function LoginPage() {
             </CardFooter>
           </form>
         </Card>
-      </div>
+      </AuthScene>
     </GuestLayout>
   );
 }
