@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { UserPlus, Loader2 } from "lucide-react";
 import { useRegisterMutation } from "@/features/auth/hooks/use-auth-queries";
+import { AuthScene } from "@/components/layout/auth-scene";
 import { GuestLayout } from "@/components/layout/guest-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,10 +74,12 @@ export default function RegisterPage() {
 
   return (
     <GuestLayout>
-      <div className="bg-muted/40 flex min-h-screen items-center justify-center px-4 py-12">
+      <AuthScene register>
         <Card className="w-full max-w-lg border shadow-lg">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold tracking-tight">Create an Account</CardTitle>
+          <CardHeader className="space-y-2 text-left">
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Your journey starts here.
+            </CardTitle>
             <CardDescription>Enter your details to create your CMart account</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -217,7 +220,7 @@ export default function RegisterPage() {
             </CardFooter>
           </form>
         </Card>
-      </div>
+      </AuthScene>
     </GuestLayout>
   );
 }
